@@ -14,21 +14,28 @@ def sign_pos(num):
         return 0
     else:
         return 1
-
-#all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a', '', '', ''), (100.0, 4.5, 'D', '', 20.0, 2.0, 7.0), (-46.2000000000000, 8.0, 'R', 'b', '', '', ''), (18.0, 9.5, 'S', '', '', '', '')]
+#Konzola z obou stran - potřebovala by opravit
+all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a', '', '', ''), (100.0, 4.5, 'D', '', 20.0, 2.0, 7.0), (-46.2000000000000, 8.0, 'R', 'b', '', '', ''), (18.0, 9.5, 'S', '', '', '', '')]
+#Moment jen záporný
 #all_loads =[(24.0, -2.0, 'S', '', '', '', ''), (24.0, 0.0, 'S', '', '', '', ''), (-96.0000000000000, 2.0, 'R', 'a', '', '', ''), (24.0, 3.0, 'S', '', '', '', ''), (92.0, 7.0, 'D', '', 23.0, 5.0, 9.0), (-68.0000000000000, 7.0, 'R', 'b', '', '', ''),]#(0.1, 8.0, 'S', '', '', '', '')]
+#NEFUNGUJE
 #all_loads = [(8.0, 2.0, 'S', '', '', '', ''), (-30.7250000000000, 3.0, 'R', 'a', '', '', ''), (10.0, 11.0, 'S', '', '', '', ''), (37.5, 6.25, 'D', '', 15.0, 5.0, 7.5), (-24.7750000000000, 8.0, 'R', 'b', '', '', '')]
 
 # Mohrovka, příklad C
-all_loads = [(-3.60000000000000, 0.0, 'R', 'a', '', '', ''), (2.0, 2.0, 'S', '', '', '', ''), (6.0, 3.0, 'S', '', '', '', ''), (-4.40000000000000, 5.0, 'R', 'b', '', '', '')]
-
+#all_loads = [(-3.60000000000000, 0.0, 'R', 'a', '', '', ''), (2.0, 2.0, 'S', '', '', '', ''), (6.0, 3.0, 'S', '', '', '', ''), (-4.40000000000000, 5.0, 'R', 'b', '', '', '')]
+#Mohrovka zprava
 #all_loads =[(-1.50000000000000, 0.0, 'R', 'a', '', '', ''), (12.0, 3.5, 'D', '', 4.0, 2.0, 5.0), (-17.5000000000000, 5.0, 'R', 'b', '', '', ''), (7.0, 6.5, 'S', '', '', '', '')]
+#Mohrovka příklad F
 #all_loads = [(-35.9500000000000, 0.0, 'R', 'a', '', '', ''), (65.0, 4.5, 'D', '', 13.0, 2.0, 7.0), (2.0, 9.0, 'S', '', '', '', ''), (-31.0500000000000, 10.0, 'R', 'b', '', '', '')]
+#Mohrovka zprava i zleva
 #all_loads = [(10.0, -1.0, 'S', '', '', '', ''), (20.0, 0.0, 'S', '', '', '', ''), (-87.3333333333333, 0.0, 'R', 'a', '', '', ''), (25.0, 3.0, 'S', '', '', '', ''), (132.0, 6.0, 'D', '', 33.0, 4.0, 8.0), (-179.666666666667, 9.0, 'R', 'b', '', '', ''), (80.0, 9.5, 'S', '', '', '', '')]
+#Mohrovka, příklad ?
 #all_loads=[(-5.84615384615385, 0.0, 'R', 'a', '', '', ''), (2.0, 1.0, 'S', '', '', '', ''), (9.0, 3.5, 'D', '', 3.0, 2.0, 5.0), (-5.15384615384615, 6.5, 'R', 'b', '', '', '')]
-
-all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 'a', '', '', ''), (5.33333333333333, 10.0, 'R', 'b', '', '', '')]
-
+#Mohrovka převislý konec zleva
+#all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 'a', '', '', ''), (5.33333333333333, 10.0, 'R', 'b', '', '', '')]
+#Mohrovka převislý konec zprava
+#all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
+#Mohrovka jednoduchý příklad
 #all_loads = [(-12.0000000000000, 0.0, 'R', 'a', '', '', ''), (24.0, 5.0, 'D', '', 4.0, 2.0, 8.0), (-12.0000000000000, 10.0, 'R', 'b', '', '', '')]
 
 positions = [i[1] if i[2] != 'D' else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
@@ -51,11 +58,13 @@ if t <= 0: #tady tweakuju
     max_pos = max(positions) + abs(t) + 0.001
     a= np.arange(0.001,max_pos,0.001)
     odchylka = 0
+    inverse_odchylka = abs(t)
     posun = abs(t)
 else:
     max_pos = max(positions) + 0.001
     a = np.arange(0.001, max_pos, 0.001)
     odchylka = abs(t)
+    inverse_odchylka = 0
     posun = 0
 Vy = [0.0 for i in a] #Posouvačky # making a list of len(a) of every value 0.0 to which we'll be adding results of for loop
 Vx = [i for i in a]
@@ -166,11 +175,12 @@ for i in all_loads:
 
 ax2.set_title(r"$Bending\ moments$")
 ax2.plot(xpoints, ypoints)
+
 ax2.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
 ax2.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8)   #black line on x-axis
 ax2.plot(x[y.index(min(y))],min(ypoints),marker = "o")
 ax2.plot(x[y.index(max(y))],max(ypoints),marker = "o")
-plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 if Mmax == min(ypoints):
     ax2.annotate(f"$M_{{{'y,max'}}} = {-Mmax:.2f}$",[x[y.index(min(y))],min(ypoints)],
              (x[y.index(min(y))]+0.5,min(ypoints)-5))
@@ -188,29 +198,39 @@ ax3.set_title(r"$Shear\ forces$")
 ax3.plot(xvpoints,-yvpoints)
 ax3.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
 ax3.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8) # black line on x axis
-plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 #ax5 = fig.add_subplot(gs[0:2, 1])
 
 subcentroid=0
 Area=0
 count = 0
-if t < reaction_a:
+Zero_divide_check = 0
+if t < reaction_a and max(positions) > reaction_b:
     for i in a:
-        if count == reaction_a * 1000:
+        if count == (reaction_a + inverse_odchylka) * 1000 and Zero_divide_check != 1:
             centroid_L = subcentroid / Area
             Area_L = Area
+            subcentroid = 0
+            Area = 0
+            Zero_divide_check = 1
+
+        if count == reaction_b * 1000:
+            centroid_M = subcentroid / Area
+            Area_M = Area
             subcentroid = 0
             Area = 0
         subcentroid += (xpoints[count] - 0.0005) * ypoints[count]
         Area += ypoints[count]
         count += 1
+
+
     centroid_P = subcentroid / Area
     Area_P = Area
-    Area = Area_P + Area_L # net Area
-    print(f"centroid P = {centroid_P} centroid L = {centroid_L}")
-    print(f"Areas = L -{Area_L} P -{Area_P} ... NET {Area_P + Area_L}")
-    centroid = (Area_P * centroid_P + Area_L * centroid_L) / Area
-elif max(positions) > reaction_b:
+    Area = Area_P +Area_M+ Area_L # net Area
+    print(f"centroid P = {centroid_P} centroid M = {centroid_M} centroid L = {centroid_L}")
+    print(f"Areas = L -{Area_L} - M {Area_M} P -{Area_P} ... NET {Area}")
+    centroid = (Area_P * centroid_P +Area_M * centroid_M+ Area_L * centroid_L) / Area
+elif max(positions)>reaction_b:
     for i in a:
         if count == reaction_b * 1000:
             centroid_L = subcentroid / Area
@@ -226,6 +246,24 @@ elif max(positions) > reaction_b:
     print(f"centroid P = {centroid_P} centroid L = {centroid_L}")
     print(f"Areas = L -{Area_L} P -{Area_P} ... NET {Area_P + Area_L}")
     centroid = (Area_P * centroid_P + Area_L * centroid_L) / Area
+elif t < reaction_a:
+    for i in a:
+        if count == (reaction_a + inverse_odchylka) * 1000 and Zero_divide_check !=1:
+            centroid_L = subcentroid / Area
+            Area_L = Area
+            subcentroid = 0
+            Area = 0
+            Zero_divide_check = 1
+        subcentroid += (xpoints[count] - 0.0005) * ypoints[count]
+        Area += ypoints[count]
+        count += 1
+    centroid_P = subcentroid / Area
+    Area_P = Area
+    Area = Area_P + Area_L # net Area
+    print(f"centroid P = {centroid_P} centroid L = {centroid_L}")
+    print(f"Areas = L -{Area_L} P -{Area_P} ... NET {Area_P + Area_L}")
+    centroid = (Area_P * centroid_P + Area_L * centroid_L) / Area
+
 else:
     for i in a:
         subcentroid += (xpoints[count]-0.0005)*ypoints[count]
@@ -233,13 +271,26 @@ else:
         count += 1
     centroid = subcentroid/Area
 
-
-if t < reaction_a:
+if t < reaction_a and max(positions) > reaction_b:
+    der3 = []
+    if reaction_a < centroid_M < reaction_b:
+        Rbz = (((centroid_M-reaction_a)*Area_M)/(reaction_b-reaction_a))
+        Raz = Area_M - Rbz
+        Mc = Area_L*(centroid_L - t) - Raz * (reaction_a-t)
+        Rcz = Area_M - Raz
+    else:
+        print("dodělat")
+    count = 0
+    hodnota_pocatku = Rcz
+    for i in a:
+        hodnota_pocatku += ypoints[count]
+        der3.append(hodnota_pocatku)
+        count += 1
+elif t < reaction_a:
     der3 = []
     if reaction_a < centroid_P < reaction_b:
         cantilever_R = -Area - ((-Area_P * (centroid_P-reaction_a)) / (reaction_b-reaction_a))
         cantilever_M = (-Area * centroid) -(((-Area_P * (centroid_P-reaction_a)) / (reaction_b-reaction_a))*reaction_b)
-        print("here")
     else:
         cantilever_R = -Area
         cantilever_M = -Area * centroid
@@ -266,8 +317,6 @@ elif max(positions) > reaction_b:
         hodnota_pocatku += ypoints[count]
         der3.append(hodnota_pocatku)
         count += 1
-
-
 else:
     print("centroid =", centroid, "and", "area = ", Area)
     der3 = []
@@ -283,6 +332,7 @@ else:
         count += 1
 
 #print("der3 =", der3)
+der3[-1]=0 # Making Shear forces go back to zero
 der3points = np.array(der3)
 #for i,j in zip(xpoints,der3points):
 #   print(i,j )
@@ -292,7 +342,7 @@ ax4.set_title(r"$Slopes\ \phi$")
 ax4.plot(xpoints,der3points)
 ax4.plot([0+abs(t),0+abs(t)],[min(der3points-10),max(der3points)+10],linestyle = "dotted",color = "#bfbfbf")
 ax4.plot([min(xpoints),max(xpoints)],[0,0],color = "black",alpha=0.8)
-plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 ax5 = fig.add_subplot(gs[1, 1])
 ax5.set_title(r"$Deflections$")
 der4 = []
@@ -302,8 +352,12 @@ count = 0
 for i in a:
     hokus += der3points[count]*0.001
     der4.append(hokus)
-    hokus += -cantilever_M
-    cantilever_M = 0
+    if t < reaction_a and max(positions) > reaction_b:
+        hokus += -Mc
+        Mc = 0
+    elif t < reaction_a:
+        hokus += -cantilever_M
+        cantilever_M = 0
     count += 1
 der4points = np.array(der4)
 
