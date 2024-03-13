@@ -20,7 +20,8 @@ all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a'
 #all_loads =[(24.0, -2.0, 'S', '', '', '', ''), (24.0, 0.0, 'S', '', '', '', ''), (-96.0000000000000, 2.0, 'R', 'a', '', '', ''), (24.0, 3.0, 'S', '', '', '', ''), (92.0, 7.0, 'D', '', 23.0, 5.0, 9.0), (-68.0000000000000, 7.0, 'R', 'b', '', '', ''),]#(0.1, 8.0, 'S', '', '', '', '')]
 #NEFUNGUJE
 #all_loads = [(8.0, 2.0, 'S', '', '', '', ''), (-30.7250000000000, 3.0, 'R', 'a', '', '', ''), (10.0, 11.0, 'S', '', '', '', ''), (37.5, 6.25, 'D', '', 15.0, 5.0, 7.5), (-24.7750000000000, 8.0, 'R', 'b', '', '', '')]
-
+#Naděje - funguje
+#all_loads=[(80.0, 2.0, 'D', '', 20.0, 0.0, 4.0), (80.0, 10.0, 'D', '', 20.0, 8.0, 12.0), (-80.0000000000000, 8.0, 'R', 'b', '', '', ''), (-80.0000000000000, 4.0, 'R', 'a', '', '', '')]
 # Mohrovka, příklad C
 #all_loads = [(-3.60000000000000, 0.0, 'R', 'a', '', '', ''), (2.0, 2.0, 'S', '', '', '', ''), (6.0, 3.0, 'S', '', '', '', ''), (-4.40000000000000, 5.0, 'R', 'b', '', '', '')]
 #Mohrovka zprava
@@ -200,13 +201,18 @@ ax3.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dott
 ax3.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8) # black line on x axis
 plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 #ax5 = fig.add_subplot(gs[0:2, 1])
-
+subcentroid_2 = 0
 subcentroid=0
 Area=0
+
 count = 0
+count_2 = 1 #test
 Zero_divide_check = 0
+centroids_in_M = []
 if t < reaction_a and max(positions) > reaction_b:
     for i in a:
+        if count == 3000:
+            print(f"Area2 = {Area}")
         if count == (reaction_a + inverse_odchylka) * 1000 and Zero_divide_check != 1:
             centroid_L = subcentroid / Area
             Area_L = Area
@@ -217,18 +223,28 @@ if t < reaction_a and max(positions) > reaction_b:
         if count == reaction_b * 1000:
             centroid_M = subcentroid / Area
             Area_M = Area
-            subcentroid = 0
-            Area = 0
+            #subcentroid = 0
+            #Area = 0
+        if reaction_a *1000 < count_2 <= reaction_b*1000+1:
+            if (ypoints[count_2] < 0 and ypoints[count] > 0) or (ypoints[count_2] > 0 and ypoints[count] < 0) or (count == reaction_b * 1000):
+                c = subcentroid / Area
+                arm = Area
+                centroids_in_M.extend([[c,arm]])
+                Area =0
+                subcentroid = 0
+
+
         subcentroid += (xpoints[count] - 0.0005) * ypoints[count]
         Area += ypoints[count]
         count += 1
+        count_2 += 1
 
-
+    print("centroids in M",centroids_in_M)
     centroid_P = subcentroid / Area
     Area_P = Area
     Area = Area_P +Area_M+ Area_L # net Area
     print(f"centroid P = {centroid_P} centroid M = {centroid_M} centroid L = {centroid_L}")
-    print(f"Areas = L -{Area_L} - M {Area_M} P -{Area_P} ... NET {Area}")
+    print(f"Areas = L = {Area_L} M = {Area_M} P = {Area_P} ... NET {Area}")
     centroid = (Area_P * centroid_P +Area_M * centroid_M+ Area_L * centroid_L) / Area
 elif max(positions)>reaction_b:
     for i in a:
@@ -274,10 +290,18 @@ else:
 if t < reaction_a and max(positions) > reaction_b:
     der3 = []
     if reaction_a < centroid_M < reaction_b:
-        Rbz = (((centroid_M-reaction_a)*Area_M)/(reaction_b-reaction_a))
+        F_M = 0
+        Area_M = 0
+
+        for i in centroids_in_M:
+            F_M += ((i[0] - reaction_a)*i[1])
+            Area_M += i[1]
+            print("ARea_M =", Area_M)
+        Rbz = (F_M/(reaction_b-reaction_a))
         Raz = Area_M - Rbz
-        Mc = Area_L*(centroid_L - t) - Raz * (reaction_a-t)
-        Rcz = Area_M - Raz
+        Mc = -Area_L*(centroid_L - t) - Raz * (reaction_a-t)
+        Rcz = ((Mc-Area_L*(reaction_a-centroid_L))/reaction_a) #pytest odečíst síly a zjisit jestli se to rovná
+        print("Raz=",Raz,f"Rbz= {Rbz}",f"Rcz= {Rcz}","Mc=",Mc)
     else:
         print("dodělat")
     count = 0
