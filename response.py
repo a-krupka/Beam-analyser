@@ -14,9 +14,9 @@ def sign_pos(num):
         return 0
     else:
         return 1
-#Konzola z obou stran - potřebovala by opravit
+#Konzola z obou stran - funguje
 all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a', '', '', ''), (100.0, 4.5, 'D', '', 20.0, 2.0, 7.0), (-46.2000000000000, 8.0, 'R', 'b', '', '', ''), (18.0, 9.5, 'S', '', '', '', '')]
-#Moment jen záporný
+#Moment jen záporný OPRAVIT
 #all_loads =[(24.0, -2.0, 'S', '', '', '', ''), (24.0, 0.0, 'S', '', '', '', ''), (-96.0000000000000, 2.0, 'R', 'a', '', '', ''), (24.0, 3.0, 'S', '', '', '', ''), (92.0, 7.0, 'D', '', 23.0, 5.0, 9.0), (-68.0000000000000, 7.0, 'R', 'b', '', '', ''),]#(0.1, 8.0, 'S', '', '', '', '')]
 #NEFUNGUJE
 #all_loads = [(8.0, 2.0, 'S', '', '', '', ''), (-30.7250000000000, 3.0, 'R', 'a', '', '', ''), (10.0, 11.0, 'S', '', '', '', ''), (37.5, 6.25, 'D', '', 15.0, 5.0, 7.5), (-24.7750000000000, 8.0, 'R', 'b', '', '', '')]
@@ -33,7 +33,7 @@ all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a'
 #Mohrovka, příklad ?
 #all_loads=[(-5.84615384615385, 0.0, 'R', 'a', '', '', ''), (2.0, 1.0, 'S', '', '', '', ''), (9.0, 3.5, 'D', '', 3.0, 2.0, 5.0), (-5.15384615384615, 6.5, 'R', 'b', '', '', '')]
 #Mohrovka převislý konec zleva
-#all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 'a', '', '', ''), (5.33333333333333, 10.0, 'R', 'b', '', '', '')]
+all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 'a', '', '', ''), (5.33333333333333, 10.0, 'R', 'b', '', '', '')]
 #Mohrovka převislý konec zprava
 #all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
 #Mohrovka jednoduchý příklad
@@ -174,7 +174,7 @@ for i in all_loads:
         ax2.plot(i[1] + abs(t), -abs(0.01*min(ypoints)), marker="^", color = "r")
         ax2.annotate("b",[i[1]+abs(t),0],[i[1]+abs(t)+(0.01*all_loads[-1][1]),-abs(0.1*min(ypoints))],color = "r")
 
-ax2.set_title(r"$Bending\ moments$")
+ax2.set_title(r"$Bending\ moments \ M_y$")
 ax2.plot(xpoints, ypoints)
 
 ax2.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
@@ -195,7 +195,7 @@ for i in all_loads:
     if i[3] == "b":
         ax3.plot(i[1] + abs(t), -abs(0.01*min(yvpoints)), marker="^", color = "r")
         ax3.annotate("b",[i[1]+abs(t),0],[i[1]+abs(t)+(0.01*all_loads[-1][1]),-abs(0.1*min(yvpoints))],color = "r")
-ax3.set_title(r"$Shear\ forces$")
+ax3.set_title(r"$Shear\ forces\ V_x$")
 ax3.plot(xvpoints,-yvpoints)
 ax3.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
 ax3.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8) # black line on x axis
@@ -209,30 +209,25 @@ count = 0
 count_2 = 1 #test
 Zero_divide_check = 0
 centroids_in_M = []
+Different_Areas_check = 0
 if t < reaction_a and max(positions) > reaction_b:
     for i in a:
-        if count == 3000:
-            print(f"Area2 = {Area}")
         if count == (reaction_a + inverse_odchylka) * 1000 and Zero_divide_check != 1:
             centroid_L = subcentroid / Area
             Area_L = Area
             subcentroid = 0
             Area = 0
             Zero_divide_check = 1
-
-        if count == reaction_b * 1000:
-            centroid_M = subcentroid / Area
-            Area_M = Area
-            #subcentroid = 0
-            #Area = 0
         if reaction_a *1000 < count_2 <= reaction_b*1000+1:
             if (ypoints[count_2] < 0 and ypoints[count] > 0) or (ypoints[count_2] > 0 and ypoints[count] < 0) or (count == reaction_b * 1000):
+                # if theres a change of sign (+ to - or - to +) a new Area and centroid is created (principle of superposition)
+                # when count is equal to the position of reaction b, the last Area is created (if the sign stays the same on the whole interval there will only be one Area and centroid)
                 c = subcentroid / Area
                 arm = Area
                 centroids_in_M.extend([[c,arm]])
                 Area =0
                 subcentroid = 0
-
+                Different_Areas_check = 1
 
         subcentroid += (xpoints[count] - 0.0005) * ypoints[count]
         Area += ypoints[count]
@@ -242,10 +237,8 @@ if t < reaction_a and max(positions) > reaction_b:
     print("centroids in M",centroids_in_M)
     centroid_P = subcentroid / Area
     Area_P = Area
-    Area = Area_P +Area_M+ Area_L # net Area
-    print(f"centroid P = {centroid_P} centroid M = {centroid_M} centroid L = {centroid_L}")
-    print(f"Areas = L = {Area_L} M = {Area_M} P = {Area_P} ... NET {Area}")
-    centroid = (Area_P * centroid_P +Area_M * centroid_M+ Area_L * centroid_L) / Area
+
+
 elif max(positions)>reaction_b:
     for i in a:
         if count == reaction_b * 1000:
@@ -289,21 +282,19 @@ else:
 
 if t < reaction_a and max(positions) > reaction_b:
     der3 = []
-    if reaction_a < centroid_M < reaction_b:
-        F_M = 0
-        Area_M = 0
+    F_M = 0
+    Area_M = 0
 
-        for i in centroids_in_M:
-            F_M += ((i[0] - reaction_a)*i[1])
-            Area_M += i[1]
-            print("ARea_M =", Area_M)
-        Rbz = (F_M/(reaction_b-reaction_a))
-        Raz = Area_M - Rbz
-        Mc = -Area_L*(centroid_L - t) - Raz * (reaction_a-t)
-        Rcz = ((Mc-Area_L*(reaction_a-centroid_L))/reaction_a) #pytest odečíst síly a zjisit jestli se to rovná
-        print("Raz=",Raz,f"Rbz= {Rbz}",f"Rcz= {Rcz}","Mc=",Mc)
-    else:
-        print("dodělat")
+    for i in centroids_in_M:
+        F_M += ((i[0] - reaction_a)*i[1])
+        Area_M += i[1]
+        print("ARea_M =", Area_M)
+    Rbz = (F_M/(reaction_b-reaction_a))
+    Raz = Area_M - Rbz
+    Mc = -Area_L*(centroid_L - t) - Raz * (reaction_a-t)
+    Rcz = ((Mc-Area_L*(reaction_a-centroid_L))/reaction_a) #pytest odečíst síly a zjisit jestli se to rovná
+    print("Raz=",Raz,f"Rbz= {Rbz}",f"Rcz= {Rcz}","Mc=",Mc)
+
     count = 0
     hodnota_pocatku = Rcz
     for i in a:
@@ -357,18 +348,19 @@ else:
 
 #print("der3 =", der3)
 der3[-1]=0 # Making Shear forces go back to zero
+der3 = [i*0.001 for i in der3]
 der3points = np.array(der3)
 #for i,j in zip(xpoints,der3points):
 #   print(i,j )
 
 ax4 = fig.add_subplot(gs[0, 1])
-ax4.set_title(r"$Slopes\ \phi$")
+ax4.set_title(r"$Slopes\ \phi \ [\frac{kNm}{EI}] $")
 ax4.plot(xpoints,der3points)
 ax4.plot([0+abs(t),0+abs(t)],[min(der3points-10),max(der3points)+10],linestyle = "dotted",color = "#bfbfbf")
 ax4.plot([min(xpoints),max(xpoints)],[0,0],color = "black",alpha=0.8)
 plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 ax5 = fig.add_subplot(gs[1, 1])
-ax5.set_title(r"$Deflections$")
+ax5.set_title(r"$Deflections \ w$")
 der4 = []
 hokus=0
 #hokus += -cantilever_M
@@ -377,10 +369,10 @@ for i in a:
     hokus += der3points[count]*0.001
     der4.append(hokus)
     if t < reaction_a and max(positions) > reaction_b:
-        hokus += -Mc
+        hokus += -Mc*0.001
         Mc = 0
     elif t < reaction_a:
-        hokus += -cantilever_M
+        hokus += -cantilever_M *0.001
         cantilever_M = 0
     count += 1
 der4points = np.array(der4)
@@ -402,7 +394,11 @@ else:
     ax5.annotate(rf"$w_{{{'max'}}} = {{{-wmax:.2f}}} / EI$", [x[der4.index(max(der4))],-max(der4points)])
 ax6 = fig.add_subplot(gs[2, 1])
 ax6.set_title(r"Results")
-ax6.text(0.1,0.9,r"$w_{max}$"+f" = {-wmax:.2f}")
+ax6.text(0.1,0.9,r"$w_{max,downward}$"+f" = {-wmax:.2f}") #if větší než 0.00 něco
+if abs(min(der4)) > 1.5:
+    ax6.text(0.1,0.8,r"$w_{max,upward}$"+f" = {-min(der4):.2f}")
+plt.xticks([])
+plt.yticks([])
 plt.show()
     # zaměřit se na "D" loads, zautomatizovat výpočet, done
     #add option: add EI or keep it constant
