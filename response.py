@@ -38,6 +38,7 @@ all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 
 #all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
 #Mohrovka jednoduchý příklad
 #all_loads = [(-12.0000000000000, 0.0, 'R', 'a', '', '', ''), (24.0, 5.0, 'D', '', 4.0, 2.0, 8.0), (-12.0000000000000, 10.0, 'R', 'b', '', '', '')]
+all_loads = [(24.0, 4.0, 'D', '', 4.0, 1.0, 7.0), (-12.0000000000000, 8.0, 'R', 'b', '', '', ''), (-12.0000000000000, 0.0, 'R', 'a', '', '', '')]
 
 positions = [i[1] if i[2] != 'D' else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
 reaction_a = float("".join([str(i[1]) for i in all_loads if i[3] == 'a'])) #computing position of reaction a by list comprehension, then converting into single float
