@@ -3,10 +3,8 @@ import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import math
 from math import ceil as ceil
 
-from matplotlib.patches import Arc
 
 
 def sign_pos(num):
@@ -54,8 +52,14 @@ all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a'
 #all_loads = [[10.0, -3.0, 'S', '', '', '', ''], [50.0, -2.0, 'M', '', '', '', ''], [20.0, 1.0, 'S', '', '', '', ''], [40.0, 5.5, 'D', '', 8.0, 3.0, 8.0], [50.0, 9.5, 'M', '', '', '', ''], [-27.5, 4.0, 'R', 'b', '', '', ''], [-42.5, 0.0, 'R', 'a', '', '', '']]
 #relative of the one above
 #all_loads = [[10.0, 0.0, 'S', '', '', '', ''], [50.0, 1.0, 'M', '', '', '', ''], [20.0, 4.0, 'S', '', '', '', ''], [40.0, 8.5, 'D', '', 8.0, 6.0, 11.0], [50.0, 12.5, 'M', '', '', '', ''], [-27.5, 7.0, 'R', 'b', '', '', ''], [-42.5, 3.0, 'R', 'a', '', '', '']]
+#Triangl
+all_loads =  [[15.0, 5.0, 'T_P', '', 10.0, 3.0, 6.0, 3.0], [-10.714285714285714, 7.0, 'R', 'b', '', '', ''], [-4.285714285714286, 0.0, 'R', 'a', '', '', '']]
+#Triangl 2
+all_loads = [[7.5, 3.0, 'T_L', '', 5.0, 2.0, 5.0, 3.0], [-4.5, 5.0, 'R', 'b', '', '', ''], [-3.0, 0.0, 'R', 'a', '', '', '']]
+#kombinace Trianglu
+all_loads = [[40.0, 2.6666666666666665, 'T_P', '', 20.0, 0.0, 4.0, 4.0], [40.0, 5.333333333333333, 'T_L', '', 20.0, 4.0, 8.0, 4.0], [50.0, 8.0, 'M', '', '', '', ''], [20.0, 9.0, 'S', '', '', '', ''], [30.0, 11.5, 'D', '', 10.0, 10.0, 13.0], [-45.833333333333336, 10.0, 'R', 'b', '', '', ''], [-84.16666666666667, 4.0, 'R', 'a', '', '', '']]
 
-positions = [i[1] if i[2] != 'D' else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
+positions = [i[1] if i[2] not in ('D','T_L','T_P') else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
 reaction_a = float("".join([str(i[1]) for i in all_loads if i[3] == 'a'])) #computing position of reaction a by list comprehension, then converting into single float
 reaction_b = float("".join([str(i[1]) for i in all_loads if i[3] == 'b'])) #computing position of reaction a by list comprehension, then converting into single float
 print(f"a = {reaction_a} b = {reaction_b}")
@@ -91,6 +95,7 @@ Vnun=[0.0 for i in a] # auxillary temporary list which stores results of most re
 ### zkusit změnit pořadí ve for loopu
 
 for j in range(len(all_loads)):
+
     if Vnun != []:
         Vy = list(map(add, Vy, Vnun)) #adds the temporary list of values Vnun to Vy ,add is a function imported from operators
     Vnun = [] # restart of the temporary list
@@ -105,6 +110,33 @@ for j in range(len(all_loads)):
             Vnun.append(result) # adding the result of each uniformly distributed load load in shear
     if all_loads[j][2] == "M":
         pass
+    if all_loads[j][2] == "T_P":
+        for i in a:
+            q = (all_loads[j][4] + abs(t))
+            L = all_loads[j][7]
+            x = (i - (abs(t) + all_loads[j][5]))
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                result = ((q / L) * x**2/2)  # ((q / L) * x**2/2)
+
+            elif all_loads[j][6] < i:
+                result = (q * L)/2    # (q * L)/2
+            else:
+                result = 0
+            Vnun.append(result)
+
+    if all_loads[j][2] == "T_L":
+        for i in a:
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                q = (all_loads[j][4] + abs(t))
+                L = all_loads[j][7]
+                x = (i - (abs(t) + all_loads[j][5]))
+                result =  (q / L) * x**2/2 + x * (q - (q/L *x))                # ((q / L) * x**2/2 + x**2/2 * (q - (q/L *x))
+            elif all_loads[j][6] < i:
+                result = (q * L)/2  # (q * L)/2
+            else:
+                result = 0
+            Vnun.append(result)
+
 
     ### potentional place for additional types of forces – "Triangular" "Parabolic" etc
 
@@ -152,6 +184,25 @@ for j in range(len(all_loads)):
             result = sign_pos(all_loads[j][5]+abs(t) - i)*all_loads[j][4]/2 * (i-(abs(t)+all_loads[j][5]))**2 \
                      - sign_pos(all_loads[j][6]+abs(t) - i)*all_loads[j][4]/2 * (i-(abs(t)+all_loads[j][6]))**2
             nun.append(result)
+    if all_loads[j][2] == "T_L":
+        for i in a:
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                result = (((((all_loads[j][4] + abs(t))/all_loads[j][7])*(i - (abs(t) + all_loads[j][5]))**3)/3) + (((all_loads[j][4] + abs(t))-((all_loads[j][4] + abs(t))/all_loads[j][7]*(i - (abs(t) + all_loads[j][5]))))*(i - (abs(t) + all_loads[j][5])))*(i - (abs(t) + all_loads[j][5]))/2)  # ((((q/L)*x**3)/3) + ((q-(q/L*x))*x)*x/2)
+
+            elif all_loads[j][6] < i:
+                result = (((all_loads[j][4]+abs(t)) * all_loads[j][7]) / 2) * ((i-(abs(t)+all_loads[j][5])) - all_loads[j][7] + 2* all_loads[j][7] / 3) # ((q * L)/2) * (x-L + 2*L/3)
+                #není komplet   # (q * L)/2
+            else:
+                result = 0
+            nun.append(result)
+    if all_loads[j][2] == "T_P":
+        for i in a:
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                result = (all_loads[j][4]+abs(t))/all_loads[j][7] * (i-(abs(t)+all_loads[j][5]))**3 / 6 # ((q / L) * x**3/6)
+            elif all_loads[j][6] < i:
+                result = (((all_loads[j][4]+abs(t)) * all_loads[j][7]) / 2) * ((i-(abs(t)+all_loads[j][5])) - all_loads[j][7] + all_loads[j][7] / 3) # ((q * L)/2) * (x-L + L/3)
+            else: result = 0
+            nun.append(result)
     if all_loads[j][2] == "M":
         for i in a:
             result = sign_pos(all_loads[j][1] + abs(t) - i) * all_loads[j][0]
@@ -179,7 +230,7 @@ ax1 = fig.add_subplot(gs[0, 0])
 ax1.set_title(r"$Loads$")
 ax1.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
 ax1.plot([min(xpoints),max(xpoints)],[0,0],linestyle = "dotted",color = "#bfbfbf")
-plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+#plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
 ax1.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8)   #black line on x-axis
 for i in all_loads:
     if i[3] == "a":
@@ -203,6 +254,46 @@ for i in all_loads:
         for j in np.linspace(i[5],i[6],4,endpoint=True):
             ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax)/2),
             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+    if i[2] == "T_L":
+        ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                     arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+        ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0], (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+
+        for j in np.linspace(i[5], i[6], 4, endpoint=True):
+            ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax) / 2),
+                         arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+    if i[2] == "T_P":
+        ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                     arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+        ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0], (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+        ax1.plot([i[5] + abs(t), i[6] + abs(t)], [1, 0.22 * abs(Mmax) / 2+i[7]+ (i[6]- i[5])], color="#4d004d",
+                 alpha=0.8)  # purple line graphing the T load
+        for j in np.linspace(i[5], i[6], 4, endpoint=True):
+            if j == i[5]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t),1),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            elif j==i[6]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax) / 2 + j),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            else:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.10 * abs(Mmax) / 2 +j/i[6]*j),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+    if i[2] == "T_L":
+        ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                     arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+        ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0], (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+        ax1.plot([i[5] + abs(t), i[6] + abs(t)], [0.22 * abs(Mmax) / 2+i[7]+ i[6]- i[5],1], color="#4d004d",
+                 alpha=0.8)  # purple line graphing the T load
+        for j in np.linspace(i[5], i[6], 4, endpoint=True):
+            if j == i[6]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t),1),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            elif j==i[5]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax) / 2+i[7]+ i[6]- i[5]),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            else:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.10 * abs(Mmax) / 2 + 40/j**2),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
     if i[2] == "M" and i[0] > 0:
         ax1.annotate(f"{i[0]} kNm",[i[1]+abs(t),0-0.5],(i[1]+abs(t),0.22 * abs(Mmax)),
         arrowprops = dict(arrowstyle="simple",connectionstyle="arc3,rad=1.5", facecolor ='#1f77b4',edgecolor='#1f77b4', ))
@@ -226,7 +317,7 @@ ax2.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dott
 ax2.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8)   #black line on x-axis
 ax2.plot(x[y.index(min(y))],min(ypoints),marker = "o")
 ax2.plot(x[y.index(max(y))],max(ypoints),marker = "o")
-plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+#plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 if Mmax == min(ypoints):
     ax2.annotate(f"$M_{{{'y,max'}}} = {-Mmax:.2f}$",[x[y.index(min(y))],min(ypoints)],
              (x[y.index(min(y))]+0.5,min(ypoints)-5))
@@ -254,7 +345,7 @@ ax3.set_title(r"$Shear\ forces\ V_x \ [kN]$")
 ax3.plot(xvpoints,-yvpoints)
 ax3.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
 ax3.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8) # black line on x axis
-plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+#plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 for i in range(len(V_maxima)):
     ax3.plot(x[V_maxima[i][1]], -V_maxima[i][0], marker="o")
     if V_maxima[i] == min(V_maxima):
@@ -292,11 +383,18 @@ if t < reaction_a and max(positions) > reaction_b:
                 Area =0
                 subcentroid = 0
                 Different_Areas_check = 1
-
-        subcentroid += (xpoints[count] - accuracy/2) * ypoints[count]
-        Area += ypoints[count]
-        count += 1
-        count_2 += 1
+        try:
+            if count == 0:
+                subcentroid += (xpoints[count] - accuracy / 2) * ((ypoints[count]) / 2)
+                Area += ((ypoints[count]) / 2)
+                count += 1
+                count_2 += 1
+            else:
+                subcentroid += (xpoints[count] - accuracy/2) * ((ypoints[count-1] + ypoints[count])/2)
+                Area += ((ypoints[count-1] + ypoints[count])/2)
+                count += 1
+                count_2 += 1
+        except: IndexError
 
     print("centroids in M",centroids_in_M)
     centroid_P = subcentroid / Area
@@ -361,6 +459,7 @@ if t < reaction_a and max(positions) > reaction_b:
 
     count = 0
     hodnota_pocatku = Rcz
+
     for i in a:
         hodnota_pocatku += ypoints[count]
         der3.append(hodnota_pocatku)
@@ -423,29 +522,30 @@ ax4.plot(xpoints,der3points)
 ax4.plot([0+abs(t),0+abs(t)],[min(der3points-10),max(der3points)+10],linestyle = "dotted",color = "#bfbfbf")
 ax4.plot([min(xpoints),max(xpoints)],[0,0],color = "black",alpha=0.8)
 ax4.plot(x[der3.index(max(der3points))],max(der3points),marker = "o")
-ax4.plot(x[int(reaction_a*inverse_accuracy)],der3points[int(reaction_a*inverse_accuracy)],marker = "o")
-ax4.plot(x[int(reaction_b*inverse_accuracy)],der3points[int(reaction_b*inverse_accuracy)],marker = "o")
+ax4.plot(x[int(reaction_a*inverse_accuracy)-1],der3points[int(reaction_a*inverse_accuracy)-1],marker = "o")
+ax4.plot(x[int(reaction_b*inverse_accuracy)-1],der3points[int(reaction_b*inverse_accuracy)-1],marker = "o")
 ax4.plot(x[0],der3points[0],marker = "o")
 ax4.plot(x[-2],der3points[-2],marker = "o")
 ax4.annotate(f"$\\varphi_{{{'max'}}} = {max(der3points):.2f}$",[x[der3.index(max(der3points))],max(der3points)],
          (x[der3.index(max(der3points))]+0.5,max(der3points)+5))
-ax4.annotate(f"$\\varphi_{{{'a'}}} = {der3points[int(reaction_a*inverse_accuracy)]:.2f}$",[x[int(reaction_a*inverse_accuracy)],der3points[int(reaction_a*1000)]],
+ax4.annotate(f"$\\varphi_{{{'a'}}} = {der3points[int(reaction_a*inverse_accuracy)]:.2f}$",[x[int(reaction_a*inverse_accuracy)],der3points[int(reaction_a*inverse_accuracy)-1]],
          (x[int(reaction_a*inverse_accuracy)]+0.5,der3points[int(reaction_a*inverse_accuracy)]-5))
-ax4.annotate(f"$\\varphi_{{{'b'}}} = {der3points[int(reaction_b*inverse_accuracy)]:.2f}$",[x[int(reaction_b*inverse_accuracy)],der3points[int(reaction_b*1000)]],
-         (x[int(reaction_b*inverse_accuracy)]+0.5,der3points[int(reaction_b*inverse_accuracy)]-5))
+ax4.annotate(f"$\\varphi_{{{'b'}}} = {der3points[int(reaction_b*inverse_accuracy)-1]:.2f}$",[x[int(reaction_b*inverse_accuracy)-1],der3points[int(reaction_b*inverse_accuracy)-1]],
+         (x[int(reaction_b*inverse_accuracy-1)]+0.5,der3points[int(reaction_b*inverse_accuracy-1)]-5))
 ax4.annotate(f"$\\varphi_{{{'(0)'}}} = {der3points[0]:.2f}$",[x[0],der3points[0]],
          (x[0]+0.5,der3points[0]-5))
 ax4.annotate(f"$\\varphi_{{{f'({max(positions)})'}}} = {der3points[-2]:.2f}$",[x[-2],der3points[-2]],
          (x[-2]-2,der3points[-2]-0.5*max(der3points)))
 #ax4.annotate(f"$\phi_{{{'min'}}} = {-max(ypoints):.2f}$", [x[y.index(max(y))], max(ypoints)],(x[y.index(max(y))]+0.5,max(ypoints)-5))
 
-plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+#plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
 ax5 = fig.add_subplot(gs[1, 1])
 ax5.set_title(r"$Deflections \ w \ [m]$")
 der4 = []
 hokus=0
 #hokus += -cantilever_M
 count = 0
+#Mc=-614.15625*1000
 for i in a:
     hokus += der3points[count]*accuracy
     der4.append(hokus)
@@ -457,11 +557,13 @@ for i in a:
         cantilever_M = 0
     count += 1
 der4points = np.array(der4)
-
+#with open("hodnoty.csv","w") as file:
+#    for i,j in zip(xpoints,der4points):
+#        file.write(f"{i,j}\n")
 ax5.plot(xpoints,-der4points)
 ax5.plot([0+abs(t),0+abs(t)],[min(der4points-10),max(der4points)+10],linestyle = "dotted",color = "#bfbfbf")
 ax5.plot([min(xpoints),max(xpoints)],[0,0],color = "black",alpha=0.8)
-plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+#plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
 ax5.plot(x[der4.index(min(der4))],-min(der4points),marker = "o")
 ax5.plot(x[der4.index(max(der4))],-max(der4points),marker = "o")
 if abs(min(der4)) < abs(max(der4)):
@@ -474,13 +576,13 @@ ax5.annotate(rf"$w_{{{'max,downward'}}} = {{{-max(der4):.2f}}} / EI$", [x[der4.i
 ax6 = fig.add_subplot(gs[2, 1])
 ax6.set_title(r"Results")
 ax6.text(0.5,0.9,r"$w_{max,downward}$"+f" = {-wmax:.2f}/EI m") #if větší než 0.00 něco
-if abs(min(der4)) > 1.5:
+if abs(min(der4)) > 0.5:
     ax6.text(0.5,0.8,r"$w_{max,upward}$"+f" = {-min(der4):.2f}/EI m")
 ax6.text(0.01,0.9,Vmax)
 ax6.text(0.01,0.8,f"$M_{{{'y,max'}}} = {-Mmax:.2f}\ kNm$")
 ax6.text(0.25,0.9,f"$\\varphi_{{{'max'}}} = {max(der3points):.2f}/EI \ rad $")
-ax6.text(0.25,0.8,f"$\\varphi_{{{'a'}}} = {der3points[int(reaction_a*inverse_accuracy)]:.2f}/EI \ rad $")
-ax6.text(0.25,0.7,f"$\\varphi_{{{'b'}}} = {der3points[int(reaction_b*inverse_accuracy)]:.2f}/EI \ rad $")
+ax6.text(0.25,0.8,f"$\\varphi_{{{'a'}}} = {der3points[int(reaction_a*inverse_accuracy)-1]:.2f}/EI \ rad $")
+ax6.text(0.25,0.7,f"$\\varphi_{{{'b'}}} = {der3points[int(reaction_b*inverse_accuracy)-1]:.2f}/EI \ rad $")
 ax6.text(0.25,0.6,f"$\\varphi_{{{'(0)'}}} = {der3points[0]:.2f}/EI \  rad $")
 ax6.text(0.25,0.5,f"$\\varphi_{{{f'({max(positions)})'}}} = {der3points[-2]:.2f}/EI \ rad $")
 plt.xticks([])
