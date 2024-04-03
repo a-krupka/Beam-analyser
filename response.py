@@ -28,14 +28,17 @@ all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a'
 #all_loads =[(-1.50000000000000, 0.0, 'R', 'a', '', '', ''), (12.0, 3.5, 'D', '', 4.0, 2.0, 5.0), (-17.5000000000000, 5.0, 'R', 'b', '', '', ''), (7.0, 6.5, 'S', '', '', '', '')]
 #Mohrovka příklad F
 #all_loads = [(-35.9500000000000, 0.0, 'R', 'a', '', '', ''), (65.0, 4.5, 'D', '', 13.0, 2.0, 7.0), (2.0, 9.0, 'S', '', '', '', ''), (-31.0500000000000, 10.0, 'R', 'b', '', '', '')]
-#Mohrovka zprava i zleva # oprava dělení nulou?
-#all_loads = [(10.0, -1.0, 'S', '', '', '', ''), (20.0, 0.0, 'S', '', '', '', ''), (-87.3333333333333, 0.0, 'R', 'a', '', '', ''), (25.0, 3.0, 'S', '', '', '', ''), (132.0, 6.0, 'D', '', 33.0, 4.0, 8.0), (-179.666666666667, 9.0, 'R', 'b', '', '', ''), (80.0, 9.5, 'S', '', '', '', '')]
+#Mohrovka zprava i zleva # opraveno
+all_loads = [[10.0, 0.0, 'S', '', '', '', ''], [20.0, 1.0, 'S', '', '', '', ''], [-87.33333333333333, 1.0, 'R', 'a', '', '', ''], [25.0, 4.0, 'S', '', '', '', ''], [132.0, 7.0, 'D', '', 33.0, 5.0, 9.0], [-179.66666666666666, 10.0, 'R', 'b', '', '', ''], [80.0, 10.5, 'S', '', '', '', '']]
 #Mohrovka, příklad ?
 #all_loads=[(-5.84615384615385, 0.0, 'R', 'a', '', '', ''), (2.0, 1.0, 'S', '', '', '', ''), (9.0, 3.5, 'D', '', 3.0, 2.0, 5.0), (-5.15384615384615, 6.5, 'R', 'b', '', '', '')]
 #Mohrovka převislý konec zleva
 #all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 'a', '', '', ''), (5.33333333333333, 10.0, 'R', 'b', '', '', '')]
 #Mohrovka převislý konec zprava
-#all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
+all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
+
+#all_loads = [[16.0, 8.0, 'D', '', 4.0, 6.0, 10.0], [-21.333333333333332, 6.0, 'R', 'b', '', '', ''], [5.333333333333333, 0.0, 'R', 'a', '', '', '']]
+
 #Mohrovka jednoduchý příklad
 #all_loads = [(-12.0000000000000, 0.0, 'R', 'a', '', '', ''), (24.0, 5.0, 'D', '', 4.0, 2.0, 8.0), (-12.0000000000000, 10.0, 'R', 'b', '', '', '')]
 #Misa příklad
@@ -53,11 +56,11 @@ all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a'
 #relative of the one above
 #all_loads = [[10.0, 0.0, 'S', '', '', '', ''], [50.0, 1.0, 'M', '', '', '', ''], [20.0, 4.0, 'S', '', '', '', ''], [40.0, 8.5, 'D', '', 8.0, 6.0, 11.0], [50.0, 12.5, 'M', '', '', '', ''], [-27.5, 7.0, 'R', 'b', '', '', ''], [-42.5, 3.0, 'R', 'a', '', '', '']]
 #Triangl
-all_loads =  [[15.0, 5.0, 'T_P', '', 10.0, 3.0, 6.0, 3.0], [-10.714285714285714, 7.0, 'R', 'b', '', '', ''], [-4.285714285714286, 0.0, 'R', 'a', '', '', '']]
+#all_loads =  [[15.0, 5.0, 'T_P', '', 10.0, 3.0, 6.0, 3.0], [-10.714285714285714, 7.0, 'R', 'b', '', '', ''], [-4.285714285714286, 0.0, 'R', 'a', '', '', '']]
 #Triangl 2
-all_loads = [[7.5, 3.0, 'T_L', '', 5.0, 2.0, 5.0, 3.0], [-4.5, 5.0, 'R', 'b', '', '', ''], [-3.0, 0.0, 'R', 'a', '', '', '']]
+#all_loads = [[7.5, 3.0, 'T_L', '', 5.0, 2.0, 5.0, 3.0], [-4.5, 5.0, 'R', 'b', '', '', ''], [-3.0, 0.0, 'R', 'a', '', '', '']]
 #kombinace Trianglu
-all_loads = [[40.0, 2.6666666666666665, 'T_P', '', 20.0, 0.0, 4.0, 4.0], [40.0, 5.333333333333333, 'T_L', '', 20.0, 4.0, 8.0, 4.0], [50.0, 8.0, 'M', '', '', '', ''], [20.0, 9.0, 'S', '', '', '', ''], [30.0, 11.5, 'D', '', 10.0, 10.0, 13.0], [-45.833333333333336, 10.0, 'R', 'b', '', '', ''], [-84.16666666666667, 4.0, 'R', 'a', '', '', '']]
+#all_loads = [[40.0, 2.6666666666666665, 'T_P', '', 20.0, 0.0, 4.0, 4.0], [40.0, 5.333333333333333, 'T_L', '', 20.0, 4.0, 8.0, 4.0], [50.0, 8.0, 'M', '', '', '', ''], [20.0, 9.0, 'S', '', '', '', ''], [30.0, 11.5, 'D', '', 10.0, 10.0, 13.0], [-45.833333333333336, 10.0, 'R', 'b', '', '', ''], [-84.16666666666667, 4.0, 'R', 'a', '', '', '']]
 
 positions = [i[1] if i[2] not in ('D','T_L','T_P') else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
 reaction_a = float("".join([str(i[1]) for i in all_loads if i[3] == 'a'])) #computing position of reaction a by list comprehension, then converting into single float
@@ -84,7 +87,7 @@ if t <= 0: #tady tweakuju
     posun = abs(t)
 else:
     max_pos = max(positions) + accuracy
-    a = np.arange(accuracy, max_pos, accuracy)
+    a = np.arange(accuracy+t, max_pos, accuracy)
     odchylka = abs(t)
     inverse_odchylka = 0
     posun = 0
@@ -355,7 +358,7 @@ for i in range(len(V_maxima)):
     else:
         ax3.annotate(f"$V_{{{f'({round(V_maxima[i][1]/1000)})'}}} = {-V_maxima[i][0]:.2f}$", [x[V_maxima[i][1]], -V_maxima[i][0]],
                      (x[V_maxima[i][1]] + 0.5, -V_maxima[i][0] ))
-
+#plt.show()
 subcentroid_2 = 0
 subcentroid=0
 Area=0
@@ -368,6 +371,7 @@ Different_Areas_check = 0
 if t < reaction_a and max(positions) > reaction_b:
     for i in a:
         if count == (reaction_a + inverse_odchylka) * inverse_accuracy and Zero_divide_check != 1:
+            #if Area != 0:
             centroid_L = subcentroid / Area
             Area_L = Area
             subcentroid = 0
@@ -403,7 +407,7 @@ if t < reaction_a and max(positions) > reaction_b:
 
 elif max(positions)>reaction_b:
     for i in a:
-        if count == reaction_b * inverse_accuracy:
+        if count == (reaction_b+inverse_odchylka) * inverse_accuracy:
             centroid_L = subcentroid / Area
             Area_L = Area
             subcentroid = 0
@@ -482,19 +486,23 @@ elif t < reaction_a:
 elif max(positions) > reaction_b:
     der3 = []
     if reaction_a < centroid_L < reaction_b:
-        cantilever_R = -Area - ((-Area_L * (centroid_L - reaction_a)) / (reaction_b - reaction_a))
-        cantilever_M = (-Area * centroid) - (((-Area_L * (centroid_L - reaction_a)) / (reaction_b - reaction_a)) * reaction_b)
+        cantilever_R = -Area - ((-Area_L * (reaction_b - centroid_L)) / (reaction_b - reaction_a))
+        cantilever_M = (-Area * centroid) - (
+                (Area_L * (reaction_b - centroid_L)) / (reaction_b - reaction_a) * reaction_b)
         print("here")
     else:
         cantilever_R = -Area
         cantilever_M = -Area * centroid
+        print("proč")
     print(f"cantilever_R = {cantilever_R}, reaction_b = {((-Area_P * (centroid_P - reaction_a)) / (reaction_b - reaction_a))}")
     count = 0
     hodnota_pocatku = cantilever_R
+    ypoints=ypoints[::-1]
     for i in a:
         hodnota_pocatku += ypoints[count]
         der3.append(hodnota_pocatku)
         count += 1
+    der3=der3[::-1]
 else:
     print("centroid =", centroid, "and", "area = ", Area)
     der3 = []
@@ -547,7 +555,10 @@ hokus=0
 count = 0
 #Mc=-614.15625*1000
 for i in a:
-    hokus += der3points[count]*accuracy
+    if max(positions) > reaction_b:
+        hokus -= der3points[count]*accuracy
+    else:
+        hokus += der3points[count]*accuracy
     der4.append(hokus)
     if t < reaction_a and max(positions) > reaction_b:
         hokus += -Mc*accuracy
@@ -555,7 +566,9 @@ for i in a:
     elif t < reaction_a:
         hokus += -cantilever_M *accuracy
         cantilever_M = 0
+
     count += 1
+
 der4points = np.array(der4)
 #with open("hodnoty.csv","w") as file:
 #    for i,j in zip(xpoints,der4points):
@@ -592,3 +605,5 @@ plt.show()
 
     #add option: add EI or keep it constant
 
+#konzola
+# opravit převislé konce na listy
