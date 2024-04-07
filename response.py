@@ -17,9 +17,8 @@ def sign_pos(num):
         return 1
 #Konzola z obou stran - funguje
 all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a', '', '', ''), (100.0, 4.5, 'D', '', 20.0, 2.0, 7.0), (-46.2000000000000, 8.0, 'R', 'b', '', '', ''), (18.0, 9.5, 'S', '', '', '', '')]
-
-#NEFUNGUJE
-#all_loads = [(8.0, 2.0, 'S', '', '', '', ''), (-30.7250000000000, 3.0, 'R', 'a', '', '', ''), (10.0, 11.0, 'S', '', '', '', ''), (37.5, 6.25, 'D', '', 15.0, 5.0, 7.5), (-24.7750000000000, 8.0, 'R', 'b', '', '', '')]
+#jinak deflections
+all_loads = [[10.0, 0.0, 'S', '', '', '', '', '', ''], [45.0, 3.5, 'D', '', 15.0, 2.0, 5.0, '', ''], [11.0, 8.0, 'S', '', '', '', '', '', ''], [-35.9, 6.0, 'R', 'b', '', '', ''], [-30.1, 1.0, 'R', 'a', '', '', '']]
 #Naděje - funguje
 #all_loads=[(80.0, 2.0, 'D', '', 20.0, 0.0, 4.0), (80.0, 10.0, 'D', '', 20.0, 8.0, 12.0), (-80.0000000000000, 8.0, 'R', 'b', '', '', ''), (-80.0000000000000, 4.0, 'R', 'a', '', '', '')]
 # Mohrovka, příklad C
@@ -29,16 +28,17 @@ all_loads = [(12.0, 0.0, 'S', '', '', '', ''), (-83.8000000000000, 3.0, 'R', 'a'
 #Mohrovka příklad F
 #all_loads = [(-35.9500000000000, 0.0, 'R', 'a', '', '', ''), (65.0, 4.5, 'D', '', 13.0, 2.0, 7.0), (2.0, 9.0, 'S', '', '', '', ''), (-31.0500000000000, 10.0, 'R', 'b', '', '', '')]
 #Mohrovka zprava i zleva # opraveno
-all_loads = [[10.0, 0.0, 'S', '', '', '', ''], [20.0, 1.0, 'S', '', '', '', ''], [-87.33333333333333, 1.0, 'R', 'a', '', '', ''], [25.0, 4.0, 'S', '', '', '', ''], [132.0, 7.0, 'D', '', 33.0, 5.0, 9.0], [-179.66666666666666, 10.0, 'R', 'b', '', '', ''], [80.0, 10.5, 'S', '', '', '', '']]
+#all_loads = [[10.0, 0.0, 'S', '', '', '', ''], [20.0, 1.0, 'S', '', '', '', ''], [-87.33333333333333, 1.0, 'R', 'a', '', '', ''], [25.0, 4.0, 'S', '', '', '', ''], [132.0, 7.0, 'D', '', 33.0, 5.0, 9.0], [-179.66666666666666, 10.0, 'R', 'b', '', '', ''], [80.0, 10.5, 'S', '', '', '', '']]
 #Mohrovka, příklad ?
 #all_loads=[(-5.84615384615385, 0.0, 'R', 'a', '', '', ''), (2.0, 1.0, 'S', '', '', '', ''), (9.0, 3.5, 'D', '', 3.0, 2.0, 5.0), (-5.15384615384615, 6.5, 'R', 'b', '', '', '')]
 #Mohrovka převislý konec zleva
 #all_loads = [(16.0, 2.0, 'D', '', 4.0, 0.0, 4.0), (-21.3333333333333, 4.0, 'R', 'a', '', '', ''), (5.33333333333333, 10.0, 'R', 'b', '', '', '')]
 #Mohrovka převislý konec zprava
-all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
+#all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R', 'b', '', '', ''), (45.0000000000000, 0.0, 'R', 'a', '', '', '')]
 
 #all_loads = [[16.0, 8.0, 'D', '', 4.0, 6.0, 10.0], [-21.333333333333332, 6.0, 'R', 'b', '', '', ''], [5.333333333333333, 0.0, 'R', 'a', '', '', '']]
 
+#all_loads = [[16.0, 2.0, 'D', '', 4.0, 0.0, 4.0], [-21.333333333333332, 4.0, 'R', 'a', '', '', ''], [5.333333333333333, 10.0, 'R', 'b', '', '', '']]
 #Mohrovka jednoduchý příklad
 #all_loads = [(-12.0000000000000, 0.0, 'R', 'a', '', '', ''), (24.0, 5.0, 'D', '', 4.0, 2.0, 8.0), (-12.0000000000000, 10.0, 'R', 'b', '', '', '')]
 #Misa příklad
@@ -61,6 +61,20 @@ all_loads = [(60.0, 7.0, 'D', '', 10.0, 4.0, 10.0), (-105.000000000000, 4.0, 'R'
 #all_loads = [[7.5, 3.0, 'T_L', '', 5.0, 2.0, 5.0, 3.0], [-4.5, 5.0, 'R', 'b', '', '', ''], [-3.0, 0.0, 'R', 'a', '', '', '']]
 #kombinace Trianglu
 #all_loads = [[40.0, 2.6666666666666665, 'T_P', '', 20.0, 0.0, 4.0, 4.0], [40.0, 5.333333333333333, 'T_L', '', 20.0, 4.0, 8.0, 4.0], [50.0, 8.0, 'M', '', '', '', ''], [20.0, 9.0, 'S', '', '', '', ''], [30.0, 11.5, 'D', '', 10.0, 10.0, 13.0], [-45.833333333333336, 10.0, 'R', 'b', '', '', ''], [-84.16666666666667, 4.0, 'R', 'a', '', '', '']]
+
+#all_loads = [[60.0, 2.6666666666666665, 'T_P', '', 30.0, 0.0, 4.0, 4.0], [-73.33333333333334, 4.0, 'R', 'a', '', '', ''], [13.333333333333336, 10.0, 'R', 'b', '', '', '']]
+#parabola
+#all_loads = [[-6.666666666666667, 0.0, 'R', 'a', '', '', ''], [26.666666666666668, 3.75, 'P_P', '', 16.0, 0.0, 5.0, 5.0, 2], [-20.0, 5.0, 'R', 'b', '', '', '']]
+#parabola
+#all_loads = [[1.8, 4.5, 'P_P', '', 0.9, 0.0, 6.0, 6.0, 2], [1.7999999999999998, 3.0, 'D', '', 0.3, 0.0, 6.0, '', ''], [-2.25, 6.0, 'R', 'b', '', '', ''], [-1.3499999999999999, 0.0, 'R', 'a', '', '', '']]
+
+#all_loads= [[12.0, 2.25, 'P_P', '', 12.0, 0.0, 3.0, 3.0, 2], [-5.4, 5.0, 'R', 'b', '', '', ''], [-6.6, 0.0, 'R', 'a', '', '', '']]
+#all_loads = [[12.0, 2.75, 'P_L', '', 12.0, 2.0, 5.0, 3.0, 2], [-6.6, 5.0, 'R', 'b', '', '', ''], [-5.4, 0.0, 'R', 'a', '', '', '']]
+#all_loads = [[12.0, 3.2, 'P_P', '', 12.0, 0.0, 4.0, 4.0, 3], [-7.6800000000000015, 5.0, 'R', 'b', '', '', ''], [-4.319999999999999, 0.0, 'R', 'a', '', '', '']]
+
+#all_loads = [[5.0, 0.0, 'M', '', '', '', '', '', ''], [1.0, 5.0, 'R', 'b', '', '', ''], [-1.0, 0.0, 'R', 'a', '', '', '']]
+#chyba
+#all_loads = [[10.0, 0.0, 'S', '', '', '', '', '', ''], [10.0, 9.0, 'S', '', '', '', '', '', ''], [-10.0, 7.0, 'R', 'b', '', '', ''], [-10.0, 2.0, 'R', 'a', '', '', '']]
 
 positions = [i[1] if i[2] not in ('D','T_L','T_P') else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
 reaction_a = float("".join([str(i[1]) for i in all_loads if i[3] == 'a'])) #computing position of reaction a by list comprehension, then converting into single float
@@ -139,7 +153,35 @@ for j in range(len(all_loads)):
             else:
                 result = 0
             Vnun.append(result)
+    if all_loads[j][2] == "P_P":
+        for i in a:
+            q = (all_loads[j][4] + abs(t))
+            L = all_loads[j][7]
+            x = (i - (abs(t) + all_loads[j][5]))
+            n = all_loads[j][8]
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                result = ((q / L**n) * (x**(n+1))/(n+1))
 
+            elif all_loads[j][6] < i:
+                result = (q * L)/(n+1)    # (q * L)/2
+            else:
+                result = 0
+            Vnun.append(result)
+    if all_loads[j][2] == "P_L":
+        for i in a:
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                q = (all_loads[j][4] + abs(t))
+                L = all_loads[j][7]
+                x = (i - (abs(t) + all_loads[j][5])) #+accuracy
+                n = all_loads[j][8]
+                h = q - ((q / L ** n) * (L-x) ** n)
+                #h = ((q / L ** n) * x ** n)
+                result =  (q*L-(q/L**n)*(L-x)**(n+1))/(n+1)               # ((q / L) * x**2/2 + x**2/2 * (q - (q/L *x))
+            elif all_loads[j][6] < i:
+                result = (q * L)/(n+1)  # (q * L)/2
+            else:
+                result = 0
+            Vnun.append(result)
 
     ### potentional place for additional types of forces – "Triangular" "Parabolic" etc
 
@@ -210,6 +252,42 @@ for j in range(len(all_loads)):
         for i in a:
             result = sign_pos(all_loads[j][1] + abs(t) - i) * all_loads[j][0]
             nun.append(result) # adding the result of each point moment in bending
+    if all_loads[j][2] == "P_P":
+        q = all_loads[j][4] + abs(t)
+        n = all_loads[j][8]
+        L = all_loads[j][7]
+        for i in a:
+
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                h = (q / L ** n) * i ** n
+                A = (h * i) / (n + 1)
+                result = A * 1 / (n + 2) * i
+            elif all_loads[j][6] < i:
+                h = (q / L ** n) * L ** n
+                A = (h * L) / (n + 1)
+                result = A * ((1/(n+2))*L + i-L)  # ((q * L)/2) * (x-L + L/3)
+
+            else:
+                result = 0
+            nun.append(result)
+    if all_loads[j][2] == "P_L":
+        q = all_loads[j][4] + abs(t)
+        n = all_loads[j][8]
+        L = all_loads[j][7]
+
+        for i in a:
+            if all_loads[j][5] <= i <= all_loads[j][6]:
+                i= i - all_loads[j][5]
+                h = q - ( (q / L ** n) * (L - i) ** n)
+                A = (h * i) / (n + 1)
+                result = A * ((n+1) / (n + 2)) * i + (q - h) * i ** 2 / 2
+            elif all_loads[j][6] < i:
+                h = (q / L ** n) * L ** n
+                A = (h * L) / (n + 1)
+                result = A * (((n+1) / (n + 2)) * L + i - L)
+            else:
+                result = 0
+            nun.append(result)
 y = list(map(add, y, nun))
 
 #for i,j in zip(x,y):
@@ -296,6 +374,48 @@ for i in all_loads:
                              arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
             else:
                 ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.10 * abs(Mmax) / 2 + 40/j**2),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+    if i[2] == "P_P":
+        n = i[8]
+        ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                     arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+        ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0], (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+        test_x = np.linspace(i[5],i[6],30)
+        test_y = ((i[4]/i[7]) * test_x**n)+1
+
+        #ax1.plot([i[5] + abs(t), i[6] + abs(t)], [1, 0.22 * abs(Mmax) / 2+i[7]+ (i[6]- i[5])], color="#4d004d",
+        #         alpha=0.8)  # purple line graphing the P load
+        ax1.plot(test_x, test_y, color="#4d004d",
+                 alpha=0.8)  # purple line graphing the P load
+        for j in np.linspace(i[5], i[6], 6, endpoint=True):
+            if j == i[5]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t),1),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            elif j==i[6]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1+(i[4]/i[7])*j**n),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            else:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1+(i[4]/i[7])*j**n),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+    if i[2] == "P_L":
+        n = i[8]
+        ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                     arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+        ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0], (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+        test_x = np.linspace(i[5],i[6],30)
+        test_y = ((i[4]/i[7]) * (test_x[::-1])**n)+1
+        ax1.plot(test_x, test_y, color="#4d004d",
+                 alpha=0.8)  # purple line graphing the P load
+        for j,k in zip(np.linspace(i[5], i[6], 6, endpoint=True)[::-1],np.linspace(i[5], i[6], 6, endpoint=True)):
+            print(j)
+            if j == i[5]:
+                ax1.annotate(f"", [j + abs(t), 0],(j + abs(t), 1+(i[4]/i[7])*k**n),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            elif j==i[6]:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t),1),
+                             arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+            else:
+                ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1+(i[4]/i[7])*k**n),
                              arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
     if i[2] == "M" and i[0] > 0:
         ax1.annotate(f"{i[0]} kNm",[i[1]+abs(t),0-0.5],(i[1]+abs(t),0.22 * abs(Mmax)),
@@ -553,7 +673,8 @@ der4 = []
 hokus=0
 #hokus += -cantilever_M
 count = 0
-#Mc=-614.15625*1000
+if t < reaction_a and max_pos <= reaction_b:
+    print(f"R = {cantilever_R} M = {cantilever_M}")
 for i in a:
     if max(positions) > reaction_b:
         hokus -= der3points[count]*accuracy
@@ -561,7 +682,7 @@ for i in a:
         hokus += der3points[count]*accuracy
     der4.append(hokus)
     if t < reaction_a and max(positions) > reaction_b:
-        hokus += -Mc*accuracy
+        hokus += Mc*accuracy
         Mc = 0
     elif t < reaction_a:
         hokus += -cantilever_M *accuracy
@@ -573,7 +694,7 @@ der4points = np.array(der4)
 #with open("hodnoty.csv","w") as file:
 #    for i,j in zip(xpoints,der4points):
 #        file.write(f"{i,j}\n")
-ax5.plot(xpoints,-der4points)
+ax5.plot(xpoints,der4points)
 ax5.plot([0+abs(t),0+abs(t)],[min(der4points-10),max(der4points)+10],linestyle = "dotted",color = "#bfbfbf")
 ax5.plot([min(xpoints),max(xpoints)],[0,0],color = "black",alpha=0.8)
 #plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
@@ -591,7 +712,8 @@ ax6.set_title(r"Results")
 ax6.text(0.5,0.9,r"$w_{max,downward}$"+f" = {-wmax:.2f}/EI m") #if větší než 0.00 něco
 if abs(min(der4)) > 0.5:
     ax6.text(0.5,0.8,r"$w_{max,upward}$"+f" = {-min(der4):.2f}/EI m")
-ax6.text(0.01,0.9,Vmax)
+if V_maxima != []:
+    ax6.text(0.01, 0.9, Vmax)
 ax6.text(0.01,0.8,f"$M_{{{'y,max'}}} = {-Mmax:.2f}\ kNm$")
 ax6.text(0.25,0.9,f"$\\varphi_{{{'max'}}} = {max(der3points):.2f}/EI \ rad $")
 ax6.text(0.25,0.8,f"$\\varphi_{{{'a'}}} = {der3points[int(reaction_a*inverse_accuracy)-1]:.2f}/EI \ rad $")
@@ -600,10 +722,18 @@ ax6.text(0.25,0.6,f"$\\varphi_{{{'(0)'}}} = {der3points[0]:.2f}/EI \  rad $")
 ax6.text(0.25,0.5,f"$\\varphi_{{{f'({max(positions)})'}}} = {der3points[-2]:.2f}/EI \ rad $")
 plt.xticks([])
 plt.yticks([])
-print("index",der3.index(max(der3points)))
+#print("index",der3.index(max(der3points)))
+with open("paraboly.csv","w") as file:
+    for i,j in zip(der4points,xpoints):
+        file.write(f"{i,j}\n")
+
 plt.show()
+
 
     #add option: add EI or keep it constant
 
 #konzola
 # opravit převislé konce na listy
+# opravit i else: na listy
+# přidat možnost cancellnutí/opakování při zadávání
+# rename T_P to T_R
