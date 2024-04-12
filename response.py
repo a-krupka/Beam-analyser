@@ -75,6 +75,11 @@ all_loads = [[10.0, 0.0, 'S', '', '', '', '', '', ''], [45.0, 3.5, 'D', '', 15.0
 #all_loads = [[5.0, 0.0, 'M', '', '', '', '', '', ''], [1.0, 5.0, 'R', 'b', '', '', ''], [-1.0, 0.0, 'R', 'a', '', '', '']]
 #chyba
 #all_loads = [[10.0, 0.0, 'S', '', '', '', '', '', ''], [10.0, 9.0, 'S', '', '', '', '', '', ''], [-10.0, 7.0, 'R', 'b', '', '', ''], [-10.0, 2.0, 'R', 'a', '', '', '']]
+#nefungují
+all_loads = [[26.666666666666668, 3.0, 'P_P', '', 20.0, 0.0, 4.0, 4.0, 2], [60.0, 7.0, 'D', '', 15.0, 5.0, 9.0, '', ''], [22.5, 11.0, 'P_L', '', 18.0, 10.0, 15.0, 5.0, 3], [-51.805555555555564, 10.0, 'R', 'b', '', '', ''], [-57.361111111111114, 4.0, 'R', 'a', '', '', '']]
+#funguje?
+all_loads = [[25.0, 2.0, 'S', '', '', '', '', '', ''], [16.666666666666668, 6.75, 'P_P', '', 10.0, 3.0, 8.0, 5.0, 2], [-20.3125, 8.0, 'R', 'b', '', '', ''], [-21.354166666666668, 0.0, 'R', 'a', '', '', '']]
+#all_loads = [[16.666666666666668, 1.25, 'P_L', '', 10.0, 0.0, 5.0, 5.0, 2], [25.0, 6.0, 'S', '', '', '', '', '', ''], [-21.354166666666668, 8.0, 'R', 'b', '', '', ''], [-20.3125, 0.0, 'R', 'a', '', '', '']]
 
 positions = [i[1] if i[2] not in ('D','T_L','T_P') else i[5] for i in all_loads] # gets the position of a load, in case of distributed load, outputs starting position
 reaction_a = float("".join([str(i[1]) for i in all_loads if i[3] == 'a'])) #computing position of reaction a by list comprehension, then converting into single float
@@ -256,12 +261,17 @@ for j in range(len(all_loads)):
         q = all_loads[j][4] + abs(t)
         n = all_loads[j][8]
         L = all_loads[j][7]
-        for i in a:
 
+        for i in a:
             if all_loads[j][5] <= i <= all_loads[j][6]:
+                i = (i - (abs(t) + all_loads[j][5]))
                 h = (q / L ** n) * i ** n
                 A = (h * i) / (n + 1)
                 result = A * 1 / (n + 2) * i
+                with open("parabolyy.csv","a") as file:
+                    file.write(f"{A,i,result}\n")
+                    file.close()
+
             elif all_loads[j][6] < i:
                 h = (q / L ** n) * L ** n
                 A = (h * L) / (n + 1)
@@ -271,16 +281,20 @@ for j in range(len(all_loads)):
                 result = 0
             nun.append(result)
     if all_loads[j][2] == "P_L":
-        q = all_loads[j][4] + abs(t)
+        q = all_loads[j][4]
         n = all_loads[j][8]
         L = all_loads[j][7]
 
         for i in a:
             if all_loads[j][5] <= i <= all_loads[j][6]:
-                i= i - all_loads[j][5]
-                h = q - ( (q / L ** n) * (L - i) ** n)
-                A = (h * i) / (n + 1)
-                result = A * ((n+1) / (n + 2)) * i + (q - h) * i ** 2 / 2
+                i= i - all_loads[j][5] #udělat to stejně jako u posouvaček
+                #h_low = ((q / L ** n) * (L-i)**(n))
+                #A_rect = h_low * i
+                #A = (h * i) / (n + 1)
+                A = ((q * L) - (q / L ** n) * (L-i)**(n+1)) / (n + 1)
+                result = A * (((1/A) * ((L**(n+2)-(L-i)**(n+2))/(n+2)) * q/ L**2) - (L-i)) #+ (q - h) * i ** 2 / 2
+                if i == 4:
+                    print("hh")
             elif all_loads[j][6] < i:
                 h = (q / L ** n) * L ** n
                 A = (h * L) / (n + 1)
@@ -296,6 +310,9 @@ xy = [(x[i],y[i]) for i in range(len(y))]
 
 xpoints = np.array(x)
 ypoints = np.array(y)
+with open("fff.csv", "w") as file:
+    for i in ypoints:
+        file.write(f"{i},\n")
 
 mpoints = np.array(xy)
 print(len(xvpoints),len(xpoints),"tady dole")
@@ -435,6 +452,8 @@ for i in all_loads:
 
 ax2.set_title(r"$Bending\ moments \ M_y \ [kNm] $")
 ax2.plot(xpoints, ypoints)
+
+
 
 ax2.plot([0+abs(t),0+abs(t)],[min(ypoints-10),max(ypoints)+10],linestyle = "dotted",color = "#bfbfbf")
 ax2.plot([min(xpoints)+odchylka,max(xpoints)+odchylka],[0,0],color = "black",alpha=0.8)   #black line on x-axis
@@ -682,7 +701,7 @@ for i in a:
         hokus += der3points[count]*accuracy
     der4.append(hokus)
     if t < reaction_a and max(positions) > reaction_b:
-        hokus += Mc*accuracy
+        hokus += -Mc*accuracy
         Mc = 0
     elif t < reaction_a:
         hokus += -cantilever_M *accuracy
@@ -694,7 +713,7 @@ der4points = np.array(der4)
 #with open("hodnoty.csv","w") as file:
 #    for i,j in zip(xpoints,der4points):
 #        file.write(f"{i,j}\n")
-ax5.plot(xpoints,der4points)
+ax5.plot(xpoints,-der4points)
 ax5.plot([0+abs(t),0+abs(t)],[min(der4points-10),max(der4points)+10],linestyle = "dotted",color = "#bfbfbf")
 ax5.plot([min(xpoints),max(xpoints)],[0,0],color = "black",alpha=0.8)
 #plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
