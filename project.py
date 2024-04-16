@@ -28,7 +28,7 @@ def distributed_load():
     Q = (fin - start) * load  # computes the equivalent concetrated load using "length * load"
     pos_Q = (fin - start) * 0.5 + start  # computes the position of concentrated load
     load_type = "D"
-    return [Q, pos_Q, load_type, "", load, start, fin]
+    return [Q, pos_Q, load_type, "", load, start, fin,"",""]
 
 
 def single_load():
@@ -36,13 +36,13 @@ def single_load():
     pos = float(input("Input position: "))
     load = float(input("Input load: "))
     load_type = "S"
-    return [load, pos, load_type, "", "", "", ""]
+    return [load, pos, load_type, "", "", "", "","",""]
 def point_moment():
     """Computes point moment"""
     pos = float(input("Input position: "))
     load = float(input("Input load: "))
     load_type = "M"
-    return [load, pos, load_type, "", "", "", ""]
+    return [load, pos, load_type, "", "", "", "","",""]
 def triangular_load():
     """Computes uniformly varying (triangular) loads using the superposition principle"""
     start = float(input("Input starting position: "))
@@ -53,9 +53,7 @@ def triangular_load():
         return None
     load_L = float(input("Input the value of load from left: "))
     load_P = float(input("Input the value of load from right: "))
-#    if not (load_L or load_P) == 0.:  # testing if the input is correct
-#        print("Wrong magnitude, not a triangle - try again")
-#        return None
+
     load = max([load_L,load_P])
     if load_L > load_P:
         load_type = "T_L"
@@ -66,13 +64,36 @@ def triangular_load():
     Q = (length * load)/2  # computes the equivalent concetrated load using "length * load/2" or in other words area of triangle
 
 
-    return [Q, pos_Q, load_type, "", load, start, fin, length]
+    return [Q, pos_Q, load_type, "", load, start, fin, length,"",""]
+def parabolic_load():
+    """Computes parabolic loads using the superposition principle"""
+    n = int(input("Input the degree of parabola: "))
+    start = float(input("Input starting position: "))
+    fin = float(input("Input final position: "))
+    length = fin - start
+    if fin <= start:  # testing if the input is correct
+        print("Wrong order of position - try again")
+        return None
+    load_L = float(input("Input the value of load from left: "))
+    load_P = float(input("Input the value of load from right: "))
+
+    load = max([load_L,load_P])
+    if load_L > load_P:
+        load_type = "P_L"
+        pos_Q = length * 1 / (n+2) + start  # computes the position of concentrated load
+    else:
+        load_type = "P_P"
+        pos_Q = length * (n+1) / (n+2) + start  # computes the position of concentrated load, when going from zero to y, the centroid is 1/3x far
+    Q = (length * load)/(n+1)  # computes the equivalent concetrated load using "length * load/2" or in other words area of triangle
+
+
+    return [Q, pos_Q, load_type, "", load, start, fin, length,n]
 
 def ask():
     """Function asks the user for the input of loads"""
     loads = []
     while True:
-        y = input('Choose load("S" for Single, "D" for Distributed,"T" for triangle, "M" for point moment) or get out of loop by typing "X": ').upper()
+        y = input('Choose load("S" for Single, "D" for Distributed,"T" for triangle, "M" for point moment, "P" for parabolic load) or get out of loop by typing "X": ').upper()
         if y == "S":
             loads.append(single_load())
         if y == "D":
@@ -85,10 +106,12 @@ def ask():
                 loads.append(t)
         if y == "M":
             loads.append(point_moment())
+        if y == "P":
+            loads.append(parabolic_load())
         if y == "X":  # when the user is done typing, while loop breaks
             break
-        if y not in ("S", "D","M","T","X"):  # checks the right input
-            print('Wrong input, type either "S","D","T","M" or "X"')
+        if y not in ("S", "D","M","T","P","X"):  # checks the right input
+            print('Wrong input, type either "S","D","T","M","P" or "X"')
     return loads
 
 
@@ -103,7 +126,7 @@ def compute():
     for i in ask():
         all_loads.append(i)
     relative_pos = copy.deepcopy(all_loads) # list keeping track of relative positions in case of converting negative postions to positive
-    positions = [i[1] if i[2] not in ('D','T_L','T_P')  else i[5] for i in all_loads]
+    positions = [i[1] if i[2] not in ('D','T_L','T_P','P_L','P_P')  else i[5] for i in all_loads]
     positions.append(a)
     positions.append(b)
     starting_pos = min(positions)  # gets the starting (most left) position of force
@@ -137,7 +160,7 @@ def compute():
             moments_sum += i[0]
             bool_mom = True
             print(moments_sum,"here")
-        if i[2] in ("D","T_L","T_P"):
+        if i[2] in ('D','T_L','T_P','P_L','P_P'):
             i[5] -= starting_pos
             i[6] -= starting_pos
 
@@ -161,9 +184,8 @@ def compute():
     return relative_pos
 def main():
     all_loads = compute()
-
-    positions = [i[1] if i[2] != 'D' else i[5] for i in
-                 all_loads]  # gets the position of a load, in case of distributed load, outputs starting position
+    positions = sorted([i[1] if i[2] not in ('D', 'T_L', 'T_P') else i[5] for i in
+                        all_loads])  # gets the position of a load, in case of distributed load, outputs starting position)
     reaction_a = float("".join([str(i[1]) for i in all_loads if i[
         3] == 'a']))  # computing position of reaction a by list comprehension, then converting into single float
     reaction_b = float("".join([str(i[1]) for i in all_loads if i[
@@ -202,6 +224,7 @@ def main():
     ### zkusit změnit pořadí ve for loopu
 
     for j in range(len(all_loads)):
+
         if Vnun != []:
             Vy = list(map(add, Vy,
                           Vnun))  # adds the temporary list of values Vnun to Vy ,add is a function imported from operators
@@ -217,8 +240,62 @@ def main():
                 Vnun.append(result)  # adding the result of each uniformly distributed load load in shear
         if all_loads[j][2] == "M":
             pass
-        if all_loads[j][2] == "T_L" or "T_P":
-            pass
+        if all_loads[j][2] == "T_P":
+            for i in a:
+                q = (all_loads[j][4] + abs(t))
+                L = all_loads[j][7]
+                x = (i - (abs(t) + all_loads[j][5]))
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    result = ((q / L) * x ** 2 / 2)  # ((q / L) * x**2/2)
+
+                elif all_loads[j][6] < i:
+                    result = (q * L) / 2  # (q * L)/2
+                else:
+                    result = 0
+                Vnun.append(result)
+
+        if all_loads[j][2] == "T_L":
+            for i in a:
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    q = (all_loads[j][4] + abs(t))
+                    L = all_loads[j][7]
+                    x = (i - (abs(t) + all_loads[j][5]))
+                    result = (q / L) * x ** 2 / 2 + x * (q - (q / L * x))  # ((q / L) * x**2/2 + x**2/2 * (q - (q/L *x))
+                elif all_loads[j][6] < i:
+                    result = (q * L) / 2  # (q * L)/2
+                else:
+                    result = 0
+                Vnun.append(result)
+        if all_loads[j][2] == "P_P":
+            for i in a:
+                q = (all_loads[j][4] + abs(t))
+                L = all_loads[j][7]
+                x = (i - (abs(t) + all_loads[j][5]))
+                n = all_loads[j][8]
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    result = ((q / L ** n) * (x ** (n + 1)) / (n + 1))
+
+                elif all_loads[j][6] < i:
+                    result = (q * L) / (n + 1)  # (q * L)/2
+                else:
+                    result = 0
+                Vnun.append(result)
+        if all_loads[j][2] == "P_L":
+            for i in a:
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    q = (all_loads[j][4] + abs(t))
+                    L = all_loads[j][7]
+                    x = (i - (abs(t) + all_loads[j][5]))  # +accuracy
+                    n = all_loads[j][8]
+                    h = q - ((q / L ** n) * (L - x) ** n)
+                    # h = ((q / L ** n) * x ** n)
+                    result = (q * L - (q / L ** n) * (L - x) ** (n + 1)) / (
+                                n + 1)  # ((q / L) * x**2/2 + x**2/2 * (q - (q/L *x))
+                elif all_loads[j][6] < i:
+                    result = (q * L) / (n + 1)  # (q * L)/2
+                else:
+                    result = 0
+                Vnun.append(result)
 
         ### potentional place for additional types of forces – "Triangular" "Parabolic" etc
 
@@ -267,12 +344,29 @@ def main():
                          - sign_pos(all_loads[j][6] + abs(t) - i) * all_loads[j][4] / 2 * (
                                      i - (abs(t) + all_loads[j][6])) ** 2
                 nun.append(result)
+        if all_loads[j][2] == "T_L":
+            for i in a:
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    result = (((((all_loads[j][4] + abs(t)) / all_loads[j][7]) * (
+                                i - (abs(t) + all_loads[j][5])) ** 3) / 3) + (((all_loads[j][4] + abs(t)) - (
+                                (all_loads[j][4] + abs(t)) / all_loads[j][7] * (i - (abs(t) + all_loads[j][5])))) * (
+                                                                                          i - (abs(t) + all_loads[j][
+                                                                                      5]))) * (i - (
+                                abs(t) + all_loads[j][5])) / 2)  # ((((q/L)*x**3)/3) + ((q-(q/L*x))*x)*x/2)
+
+                elif all_loads[j][6] < i:
+                    result = (((all_loads[j][4] + abs(t)) * all_loads[j][7]) / 2) * (
+                                (i - (abs(t) + all_loads[j][5])) - all_loads[j][7] + 2 * all_loads[j][
+                            7] / 3)  # ((q * L)/2) * (x-L + 2*L/3)
+                    # není komplet   # (q * L)/2
+                else:
+                    result = 0
+                nun.append(result)
         if all_loads[j][2] == "T_P":
             for i in a:
                 if all_loads[j][5] <= i <= all_loads[j][6]:
                     result = (all_loads[j][4] + abs(t)) / all_loads[j][7] * (
                                 i - (abs(t) + all_loads[j][5])) ** 3 / 6  # ((q / L) * x**3/6)
-                    #print("hi")
                 elif all_loads[j][6] < i:
                     result = (((all_loads[j][4] + abs(t)) * all_loads[j][7]) / 2) * (
                                 (i - (abs(t) + all_loads[j][5])) - all_loads[j][7] + all_loads[j][
@@ -284,14 +378,67 @@ def main():
             for i in a:
                 result = sign_pos(all_loads[j][1] + abs(t) - i) * all_loads[j][0]
                 nun.append(result)  # adding the result of each point moment in bending
-    y = list(map(add, y, nun))
+        if all_loads[j][2] == "P_P":
+            q = all_loads[j][4] + abs(t)
+            n = all_loads[j][8]
+            L = all_loads[j][7]
 
+            for i in a:
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    i = (i - (abs(t) + all_loads[j][5]))
+                    h = (q / L ** n) * i ** n
+                    A = (h * i) / (n + 1)
+                    result = A * 1 / (n + 2) * i
+                    with open("parabolyy.csv", "a") as file:
+                        file.write(f"{A, i, result}\n")
+                        file.close()
+
+                elif all_loads[j][6] < i:
+                    h = (q / L ** n) * L ** n
+                    A = (h * L) / (n + 1)
+                    result = A * ((1 / (n + 2)) * L + i - L)  # ((q * L)/2) * (x-L + L/3)
+
+                else:
+                    result = 0
+                nun.append(result)
+        if all_loads[j][2] == "P_L":
+            q = all_loads[j][4]
+            n = all_loads[j][8]
+            L = all_loads[j][7]
+
+            for i in a:
+                if all_loads[j][5] <= i <= all_loads[j][6]:
+                    i = i - all_loads[j][5]  # udělat to stejně jako u posouvaček
+                    # h_low = ((q / L ** n) * (L-i)**(n))
+                    # A_rect = h_low * i
+                    # A = (h * i) / (n + 1)
+                    A = ((q * L) - (q / L ** n) * (L - i) ** (n + 1)) / (n + 1)
+                    if A == 0:
+                        print("ffuua")
+                        result = 0
+                    else:
+                        result = A * (((1 / A) * ((L ** (n + 2) - (L - i) ** (n + 2)) / (n + 2)) * q / L ** n) - (
+                                    L - i))  # + (q - h) * i ** 2 / 2
+                    if i == 4:
+                        print("hh")
+                elif all_loads[j][6] < i:
+                    h = (q / L ** n) * L ** n
+                    A = (h * L) / (n + 1)
+                    result = A * (((n + 1) / (n + 2)) * L + i - L)
+                else:
+                    result = 0
+                nun.append(result)
+    y = list(map(add, y, nun))
+    y[0] = 0
     # for i,j in zip(x,y):
     #    print(i,j)
     xy = [(x[i], y[i]) for i in range(len(y))]
 
     xpoints = np.array(x)
     ypoints = np.array(y)
+    with open("fff.csv", "w") as file:
+        for i in ypoints:
+            file.write(f"{i},\n")
 
     mpoints = np.array(xy)
     print(len(xvpoints), len(xpoints), "tady dole")
@@ -307,8 +454,8 @@ def main():
     ax1.set_title(r"$Loads$")
     ax1.plot([0 + abs(t), 0 + abs(t)], [min(ypoints - 10), max(ypoints) + 10], linestyle="dotted", color="#bfbfbf")
     ax1.plot([min(xpoints), max(xpoints)], [0, 0], linestyle="dotted", color="#bfbfbf")
-    plt.xticks(np.arange(t, positions[-1] + abs(t), step=1),
-               labels=[i - abs(t) for i in range(round(positions[0]), ceil(positions[-1] + abs(t)))])
+    plt.xticks(np.arange(t, positions[-1] + 1))  # ,labels=np.arange(t, positions[-1]+abs(t), step=0.5))
+
     ax1.plot([min(xpoints) + odchylka, max(xpoints) + odchylka], [0, 0], color="black",
              alpha=0.8)  # black line on x-axis
     for i in all_loads:
@@ -342,8 +489,7 @@ def main():
                          arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
             ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0],
                          (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
-            ax1.plot([i[5] + abs(t), i[6] + abs(t)], [0.22 * abs(Mmax) / 2, 0.22 * abs(Mmax) / 2], color="#4d004d",
-                     alpha=0.8)  # purple line graphing the D load
+
             for j in np.linspace(i[5], i[6], 4, endpoint=True):
                 ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax) / 2),
                              arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
@@ -369,17 +515,61 @@ def main():
                          arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
             ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0],
                          (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
-            ax1.plot([i[5] + abs(t), i[6] + abs(t)], [0.22 * abs(Mmax) / 2 + i[7] + (i[6] - i[5], 1)], color="#4d004d",
+            ax1.plot([i[5] + abs(t), i[6] + abs(t)], [0.22 * abs(Mmax) / 2 + i[7] + i[6] - i[5], 1], color="#4d004d",
                      alpha=0.8)  # purple line graphing the T load
             for j in np.linspace(i[5], i[6], 4, endpoint=True):
                 if j == i[6]:
                     ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1),
                                  arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
                 elif j == i[5]:
-                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax) / 2 + j),
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.22 * abs(Mmax) / 2 + i[7] + i[6] - i[5]),
                                  arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
                 else:
-                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.10 * abs(Mmax) / 2 + j / i[6] * j),
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 0.10 * abs(Mmax) / 2 + 40 / j ** 2),
+                                 arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+        if i[2] == "P_P":
+            n = i[8]
+            ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                         arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+            ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0],
+                         (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+            test_x = np.linspace(i[5], i[6], 30)
+            test_y = ((i[4] / i[7]) * test_x ** n) + 1
+
+            # ax1.plot([i[5] + abs(t), i[6] + abs(t)], [1, 0.22 * abs(Mmax) / 2+i[7]+ (i[6]- i[5])], color="#4d004d",
+            #         alpha=0.8)  # purple line graphing the P load
+            ax1.plot(test_x, test_y, color="#4d004d",
+                     alpha=0.8)  # purple line graphing the P load
+            for j in np.linspace(i[5], i[6], 6, endpoint=True):
+                if j == i[5]:
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1),
+                                 arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+                elif j == i[6]:
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1 + (i[4] / i[7]) * j ** n),
+                                 arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+                else:
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1 + (i[4] / i[7]) * j ** n),
+                                 arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+        if i[2] == "P_L":
+            n = i[8]
+            ax1.annotate(f"Q = {i[0]} kN", [i[1] + abs(t), 0], (i[1] + abs(t), 0.22 * abs(Mmax)),
+                         arrowprops=dict(facecolor='#1f77b4', edgecolor='#1f77b4', headlength=5, width=1, ))
+            ax1.annotate(f"q = {i[4]} " + r"$\frac{kN}{m}$", [i[6] + abs(t), 0],
+                         (i[6] + abs(t), 0.22 * abs(Mmax) / 2), )
+            test_x = np.linspace(i[5], i[6], 30)
+            test_y = ((i[4] / i[7]) * (test_x[::-1]) ** n) + 1
+            ax1.plot(test_x, test_y, color="#4d004d",
+                     alpha=0.8)  # purple line graphing the P load
+            for j, k in zip(np.linspace(i[5], i[6], 6, endpoint=True)[::-1], np.linspace(i[5], i[6], 6, endpoint=True)):
+                print(j)
+                if j == i[5]:
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1 + (i[4] / i[7]) * k ** n),
+                                 arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+                elif j == i[6]:
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1),
+                                 arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
+                else:
+                    ax1.annotate(f"", [j + abs(t), 0], (j + abs(t), 1 + (i[4] / i[7]) * k ** n),
                                  arrowprops=dict(facecolor='#4d004d', edgecolor='#4d004d', headlength=5, width=1, ))
         if i[2] == "M" and i[0] > 0:
             ax1.annotate(f"{i[0]} kNm", [i[1] + abs(t), 0 - 0.5], (i[1] + abs(t), 0.22 * abs(Mmax)),
@@ -409,8 +599,8 @@ def main():
              alpha=0.8)  # black line on x-axis
     ax2.plot(x[y.index(min(y))], min(ypoints), marker="o")
     ax2.plot(x[y.index(max(y))], max(ypoints), marker="o")
-    plt.xticks(np.arange(odchylka, positions[-1] + int(inverse_odchylka), step=1), labels=[i - abs(t) for i in range(
-        round(positions[0]) + int(inverse_odchylka), ceil(positions[-1] + int(inverse_odchylka)))])
+    plt.xticks(np.arange(t, positions[
+        -1] + 1))  # step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
     if Mmax == min(ypoints):
         ax2.annotate(f"$M_{{{'y,max'}}} = {-Mmax:.2f}$", [x[y.index(min(y))], min(ypoints)],
                      (x[y.index(min(y))] + 0.5, min(ypoints) - 5))
@@ -444,8 +634,8 @@ def main():
     ax3.plot([0 + abs(t), 0 + abs(t)], [min(ypoints - 10), max(ypoints) + 10], linestyle="dotted", color="#bfbfbf")
     ax3.plot([min(xpoints) + odchylka, max(xpoints) + odchylka], [0, 0], color="black",
              alpha=0.8)  # black line on x axis
-    plt.xticks(np.arange(odchylka, positions[-1] + int(inverse_odchylka), step=1), labels=[i - abs(t) for i in range(
-        round(positions[0]) + int(inverse_odchylka), ceil(positions[-1] + int(inverse_odchylka)))])
+    plt.xticks(np.arange(t, positions[
+        -1] + 1)),  # step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
     for i in range(len(V_maxima)):
         ax3.plot(x[V_maxima[i][1]], -V_maxima[i][0], marker="o")
         if V_maxima[i] == min(V_maxima):
@@ -456,7 +646,7 @@ def main():
             ax3.annotate(f"$V_{{{f'({round(V_maxima[i][1] / 1000)})'}}} = {-V_maxima[i][0]:.2f}$",
                          [x[V_maxima[i][1]], -V_maxima[i][0]],
                          (x[V_maxima[i][1]] + 0.5, -V_maxima[i][0]))
-    #plt.show()
+    # plt.show()
     subcentroid_2 = 0
     subcentroid = 0
     Area = 0
@@ -469,6 +659,7 @@ def main():
     if t < reaction_a and max(positions) > reaction_b:
         for i in a:
             if count == (reaction_a + inverse_odchylka) * inverse_accuracy and Zero_divide_check != 1:
+                # if Area != 0:
                 centroid_L = subcentroid / Area
                 Area_L = Area
                 subcentroid = 0
@@ -506,7 +697,7 @@ def main():
 
     elif max(positions) > reaction_b:
         for i in a:
-            if count == reaction_b * inverse_accuracy:
+            if count == (reaction_b + inverse_odchylka) * inverse_accuracy:
                 centroid_L = subcentroid / Area
                 Area_L = Area
                 subcentroid = 0
@@ -574,25 +765,6 @@ def main():
             cantilever_R = -Area - ((-Area_P * (centroid_P - reaction_a)) / (reaction_b - reaction_a))
             cantilever_M = (-Area * centroid) - (
                         ((-Area_P * (centroid_P - reaction_a)) / (reaction_b - reaction_a)) * reaction_b)
-            print("nová poz")
-        else:
-            cantilever_R = -Area
-            cantilever_M = -Area * centroid
-        print(
-            f"cantilever_L = {cantilever_R}, reaction_b = {((-Area_P * (centroid_P - reaction_a)) / (reaction_b - reaction_a))}")
-        count = 0
-        hodnota_pocatku = cantilever_R
-        for i in a:
-            hodnota_pocatku += ypoints[count]
-            der3.append(hodnota_pocatku)
-            count += 1
-    elif max(positions) > reaction_b:
-        der3 = []
-        if reaction_a < centroid_L < reaction_b:
-            cantilever_R = -Area - ((-Area_L * (reaction_b-centroid_L)) / (reaction_b - reaction_a))
-            cantilever_M = (-Area * centroid) - (
-                        (Area_L * (reaction_b-centroid_L)) / (reaction_b - reaction_a) * reaction_b)
-            print("here")
         else:
             cantilever_R = -Area
             cantilever_M = -Area * centroid
@@ -604,6 +776,27 @@ def main():
             hodnota_pocatku += ypoints[count]
             der3.append(hodnota_pocatku)
             count += 1
+    elif max(positions) > reaction_b:
+        der3 = []
+        if reaction_a < centroid_L < reaction_b:
+            cantilever_R = -Area - ((-Area_L * (reaction_b - centroid_L)) / (reaction_b - reaction_a))
+            cantilever_M = (-Area * centroid) - (
+                    (Area_L * (reaction_b - centroid_L)) / (reaction_b - reaction_a) * reaction_b)
+            print("here")
+        else:
+            cantilever_R = -Area
+            cantilever_M = -Area * centroid
+            print("proč")
+        print(
+            f"cantilever_R = {cantilever_R}, reaction_b = {((-Area_P * (centroid_P - reaction_a)) / (reaction_b - reaction_a))}")
+        count = 0
+        hodnota_pocatku = cantilever_R
+        ypoints = ypoints[::-1]
+        for i in a:
+            hodnota_pocatku += ypoints[count]
+            der3.append(hodnota_pocatku)
+            count += 1
+        der3 = der3[::-1]
     else:
         print("centroid =", centroid, "and", "area = ", Area)
         der3 = []
@@ -651,24 +844,31 @@ def main():
                  (x[-2] - 2, der3points[-2] - 0.5 * max(der3points)))
     # ax4.annotate(f"$\phi_{{{'min'}}} = {-max(ypoints):.2f}$", [x[y.index(max(y))], max(ypoints)],(x[y.index(max(y))]+0.5,max(ypoints)-5))
 
-    # plt.xticks(np.arange(odchylka, positions[-1]+int(inverse_odchylka), step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+    plt.xticks(np.arange(t, positions[
+        -1] + 1))  # ,labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
     ax5 = fig.add_subplot(gs[1, 1])
     ax5.set_title(r"$Deflections \ w \ [m]$")
     der4 = []
     hokus = 0
     # hokus += -cantilever_M
     count = 0
-    # Mc=-614.15625*1000
+    if t < reaction_a and max_pos <= reaction_b:
+        print(f"R = {cantilever_R} M = {cantilever_M}")
     for i in a:
-        hokus += der3points[count] * accuracy
+        if max(positions) > reaction_b:
+            hokus -= der3points[count] * accuracy
+        else:
+            hokus += der3points[count] * accuracy
         der4.append(hokus)
         if t < reaction_a and max(positions) > reaction_b:
-            hokus += -Mc * accuracy
+            hokus += Mc * accuracy
             Mc = 0
         elif t < reaction_a:
             hokus += -cantilever_M * accuracy
             cantilever_M = 0
+
         count += 1
+
     der4points = np.array(der4)
     # with open("hodnoty.csv","w") as file:
     #    for i,j in zip(xpoints,der4points):
@@ -677,7 +877,8 @@ def main():
     ax5.plot([0 + abs(t), 0 + abs(t)], [min(der4points - 10), max(der4points) + 10], linestyle="dotted",
              color="#bfbfbf")
     ax5.plot([min(xpoints), max(xpoints)], [0, 0], color="black", alpha=0.8)
-    # plt.xticks(np.arange(t, positions[-1]+abs(t), step=1),labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+    plt.xticks(np.arange(t, positions[
+        -1] + 1))  # ,labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
     ax5.plot(x[der4.index(min(der4))], -min(der4points), marker="o")
     ax5.plot(x[der4.index(max(der4))], -max(der4points), marker="o")
     if abs(min(der4)) < abs(max(der4)):
@@ -692,7 +893,8 @@ def main():
     ax6.text(0.5, 0.9, r"$w_{max,downward}$" + f" = {-wmax:.2f}/EI m")  # if větší než 0.00 něco
     if abs(min(der4)) > 0.5:
         ax6.text(0.5, 0.8, r"$w_{max,upward}$" + f" = {-min(der4):.2f}/EI m")
-    ax6.text(0.01, 0.9, Vmax)
+    if V_maxima != []:
+        ax6.text(0.01, 0.9, Vmax)
     ax6.text(0.01, 0.8, f"$M_{{{'y,max'}}} = {-Mmax:.2f}\ kNm$")
     ax6.text(0.25, 0.9, f"$\\varphi_{{{'max'}}} = {max(der3points):.2f}/EI \ rad $")
     ax6.text(0.25, 0.8, f"$\\varphi_{{{'a'}}} = {der3points[int(reaction_a * inverse_accuracy) - 1]:.2f}/EI \ rad $")
@@ -701,12 +903,14 @@ def main():
     ax6.text(0.25, 0.5, f"$\\varphi_{{{f'({max(positions)})'}}} = {der3points[-2]:.2f}/EI \ rad $")
     plt.xticks([])
     plt.yticks([])
-    print("index", der3.index(max(der3points)))
+    # print("index",der3.index(max(der3points)))
+    with open("paraboly.csv", "w") as file:
+        for i, j in zip(der4points, xpoints):
+            file.write(f"{i, j}\n")
+
     plt.show()
 
-
-
-
 main()
+
 
 
