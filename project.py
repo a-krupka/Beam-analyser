@@ -53,8 +53,9 @@ def triangular_load():
         return None
     load_L = float(input("Input the value of load from left: ").replace(",","."))
     load_P = float(input("Input the value of load from right: ").replace(",","."))
-
-    load = max([load_L,load_P])
+    if (load_L != 0 and load_P != 0):
+        return None
+    load = load_L if load_P == 0 else load_P
     if load_L > load_P:
         load_type = "T_L"
         pos_Q = length * 1 / 3 + start  # computes the position of concentrated load
@@ -76,8 +77,9 @@ def parabolic_load():
         return None
     load_L = float(input("Input the value of load from left: ").replace(",","."))
     load_P = float(input("Input the value of load from right: ").replace(",","."))
-
-    load = max([load_L,load_P])
+    if (load_L != 0 and load_P != 0):
+        return None
+    load = load_L if load_P == 0 else load_P
     if load_L > load_P:
         load_type = "P_L"
         pos_Q = length * 1 / (n+2) + start  # computes the position of concentrated load
