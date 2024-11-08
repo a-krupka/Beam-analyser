@@ -19,12 +19,12 @@ def sign_pos(num):
 
 def distributed_load():
     """Computes uniformly distributed loads using the superposition principle"""
-    start = float(input("Input starting position: "))
-    fin = float(input("Input final position: "))
+    start = float(input("Input starting position: ").replace(",","."))
+    fin = float(input("Input final position: ").replace(",","."))
     if fin <= start:  # testing if the input is correct
         print("Wrong order of position - try again")
         return None
-    load = float(input("Input distributed load: "))
+    load = float(input("Input distributed load: ").replace(",","."))
     Q = (fin - start) * load  # computes the equivalent concetrated load using "length * load"
     pos_Q = (fin - start) * 0.5 + start  # computes the position of concentrated load
     load_type = "D"
@@ -33,26 +33,26 @@ def distributed_load():
 
 def single_load():
     """Computes singular load"""
-    pos = float(input("Input position: "))
-    load = float(input("Input load: "))
+    pos = float(input("Input position: ").replace(",","."))
+    load = float(input("Input load: ").replace(",","."))
     load_type = "S"
     return [load, pos, load_type, "", "", "", "","",""]
 def point_moment():
     """Computes point moment"""
-    pos = float(input("Input position: "))
-    load = float(input("Input load: "))
+    pos = float(input("Input position: ").replace(",","."))
+    load = float(input("Input load: ").replace(",","."))
     load_type = "M"
     return [load, pos, load_type, "", "", "", "","",""]
 def triangular_load():
     """Computes uniformly varying (triangular) loads using the superposition principle"""
-    start = float(input("Input starting position: "))
-    fin = float(input("Input final position: "))
+    start = float(input("Input starting position: ").replace(",","."))
+    fin = float(input("Input final position: ").replace(",","."))
     length = fin - start
     if fin <= start:  # testing if the input is correct
         print("Wrong order of position - try again")
         return None
-    load_L = float(input("Input the value of load from left: "))
-    load_P = float(input("Input the value of load from right: "))
+    load_L = float(input("Input the value of load from left: ").replace(",","."))
+    load_P = float(input("Input the value of load from right: ").replace(",","."))
 
     load = max([load_L,load_P])
     if load_L > load_P:
@@ -67,15 +67,15 @@ def triangular_load():
     return [Q, pos_Q, load_type, "", load, start, fin, length,"",""]
 def parabolic_load():
     """Computes parabolic loads using the superposition principle"""
-    n = int(input("Input the degree of parabola: "))
-    start = float(input("Input starting position: "))
-    fin = float(input("Input final position: "))
+    n = int(input("Input the degree of parabola: ").replace(",","."))
+    start = float(input("Input starting position: ").replace(",","."))
+    fin = float(input("Input final position: ").replace(",","."))
     length = fin - start
     if fin <= start:  # testing if the input is correct
         print("Wrong order of position - try again")
         return None
-    load_L = float(input("Input the value of load from left: "))
-    load_P = float(input("Input the value of load from right: "))
+    load_L = float(input("Input the value of load from left: ").replace(",","."))
+    load_P = float(input("Input the value of load from right: ").replace(",","."))
 
     load = max([load_L,load_P])
     if load_L > load_P:
@@ -117,8 +117,8 @@ def ask():
 
 def compute():
     # computes the support reactions of the beam
-    a = float(input("Input position of point a: "))
-    b = float(input("Input position of point b: "))
+    a = float(input("Input position of point a: ").replace(",","."))
+    b = float(input("Input position of point b: ").replace(",","."))
     a_absolute = a
     b_absolute = b
 
@@ -150,8 +150,8 @@ def compute():
             else:
                 right_side[0] = right_side[0] + (i[0] * (a - i[1]))
 
-    print(right_side)
-    print(left_side)
+    print(f"Right side =  {right_side[0]}")
+    print(f"Left side =  {left_side[0]}")
 
     moments_sum = 0 # creating a variable for potential sum of point moments
     bool_mom = False
@@ -855,13 +855,13 @@ def main():
     if t < reaction_a and max_pos <= reaction_b:
         print(f"R = {cantilever_R} M = {cantilever_M}")
     for i in a:
-        if max(positions) > reaction_b:
-            hokus -= der3points[count] * accuracy
+        if max(positions) > reaction_b and t == reaction_a:
+            hokus -= der3points[count] * accuracy  # tady bylo minus
         else:
             hokus += der3points[count] * accuracy
         der4.append(hokus)
         if t < reaction_a and max(positions) > reaction_b:
-            hokus += Mc * accuracy
+            hokus += -Mc * accuracy
             Mc = 0
         elif t < reaction_a:
             hokus += -cantilever_M * accuracy
@@ -909,7 +909,6 @@ def main():
             file.write(f"{i, j}\n")
 
     plt.show()
-
 main()
 
 
