@@ -438,10 +438,6 @@ def main():
 
     xpoints = np.array(x)
     ypoints = np.array(y)
-    with open("fff.csv", "w") as file:
-        for i in ypoints:
-            file.write(f"{i},\n")
-
     mpoints = np.array(xy)
     print(len(xvpoints), len(xpoints), "tady dole")
     print(min(xpoints))
@@ -906,10 +902,6 @@ def main():
     plt.xticks([])
     plt.yticks([])
     # print("index",der3.index(max(der3points)))
-    with open("paraboly.csv", "w") as file:
-        for i, j in zip(der4points, xpoints):
-            file.write(f"{i, j}\n")
-
     plt.show()
 main()
 
