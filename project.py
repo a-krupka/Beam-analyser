@@ -56,7 +56,7 @@ def triangular_load():
     if (load_L != 0 and load_P != 0):
         return None
     load = load_L if load_P == 0 else load_P
-    if abs(load_L) > load_P:
+    if abs(load_L) > abs(load_P):
         load_type = "T_L"
         pos_Q = length * 1 / 3 + start  # computes the position of concentrated load
     else:
@@ -80,7 +80,7 @@ def parabolic_load():
     if (load_L != 0 and load_P != 0):
         return None
     load = load_L if load_P == 0 else load_P
-    if abs(load_L) > load_P:
+    if abs(load_L) > abs(load_P):
         load_type = "P_L"
         pos_Q = length * 1 / (n+2) + start  # computes the position of concentrated load
     else:
@@ -95,7 +95,7 @@ def ask():
     """Function asks the user for the input of loads"""
     loads = []
     while True:
-        y = input('Choose load("S" for Single, "D" for Distributed,"T" for triangle, "M" for point moment, "P" for parabolic load) or get out of loop by typing "X": ').upper()
+        y = input('Choose load("S" for Single, "D" for Distributed,"T" for triangle, "M" for point moment, "P" for parabolic load) or get out of loop by typing "X" \nTo remove last valid value enter "POP": ').upper()
         if y == "S":
             loads.append(single_load())
         if y == "D":
@@ -112,7 +112,9 @@ def ask():
             loads.append(parabolic_load())
         if y == "X":  # when the user is done typing, while loop breaks
             break
-        if y not in ("S", "D","M","T","P","X"):  # checks the right input
+        if y == "POP":
+            loads.pop()
+        if y not in ("S", "D","M","T","P","X","POP"):  # checks the right input
             print('Wrong input, type either "S","D","T","M","P" or "X"')
     return loads
 
@@ -201,10 +203,8 @@ def main():
     print(positions, f"min pos is {min(positions)}")
     all_loads = (sorted(all_loads, key=itemgetter(1)))
     print(all_loads)
-    for i in all_loads:
-        if i[2] == "D":
-            if i[6] > max(positions):
-                positions.append(i[6])
+
+    positions = [i[1] if i[2] not in ('D','T_L','T_P','P_L','P_P') else i[6] for i in all_loads] #getting the max position
     print(positions)
     if t <= 0:  # tady tweakuju
         max_pos = max(positions) + abs(t) + accuracy
@@ -349,8 +349,8 @@ def main():
         if all_loads[j][2] == "T_L":
             for i in a:
                 if all_loads[j][5] <= i <= all_loads[j][6]:
-                    result = (((((all_loads[j][4] + abs(t)) / all_loads[j][7]) * (
-                                i - (abs(t) + all_loads[j][5])) ** 3) / 3) + (((all_loads[j][4] + abs(t)) - (
+                    result = (((((all_loads[j][4] + abs(t)) / all_loads[j][7]) *
+                                (i - (abs(t) + all_loads[j][5])) ** 3) / 3) + (((all_loads[j][4] + abs(t)) - (
                                 (all_loads[j][4] + abs(t)) / all_loads[j][7] * (i - (abs(t) + all_loads[j][5])))) * (
                                                                                           i - (abs(t) + all_loads[j][
                                                                                       5]))) * (i - (
@@ -452,7 +452,7 @@ def main():
     ax1.set_title(r"$Loads$")
     ax1.plot([0 + abs(t), 0 + abs(t)], [min(ypoints - 10), max(ypoints) + 10], linestyle="dotted", color="#bfbfbf")
     ax1.plot([min(xpoints), max(xpoints)], [0, 0], linestyle="dotted", color="#bfbfbf")
-    plt.xticks(np.arange(t, positions[-1] + 1))  # ,labels=np.arange(t, positions[-1]+abs(t), step=0.5))
+    #plt.xticks(np.arange(t, positions[-1] + 1))  # ,labels=np.arange(t, positions[-1]+abs(t), step=0.5))
 
     ax1.plot([min(xpoints) + odchylka, max(xpoints) + odchylka], [0, 0], color="black",
              alpha=0.8)  # black line on x-axis
@@ -597,8 +597,7 @@ def main():
              alpha=0.8)  # black line on x-axis
     ax2.plot(x[y.index(min(y))], min(ypoints), marker="o")
     ax2.plot(x[y.index(max(y))], max(ypoints), marker="o")
-    plt.xticks(np.arange(t, positions[
-        -1] + 1))  # step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+    #plt.xticks(np.arange(t, positions[-1] + 1))  # step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
     if Mmax == min(ypoints):
         ax2.annotate(f"$M_{{{'y,max'}}} = {-Mmax:.2f}$", [x[y.index(min(y))], min(ypoints)],
                      (x[y.index(min(y))] + 0.5, min(ypoints) - 5))
@@ -632,8 +631,7 @@ def main():
     ax3.plot([0 + abs(t), 0 + abs(t)], [min(ypoints - 10), max(ypoints) + 10], linestyle="dotted", color="#bfbfbf")
     ax3.plot([min(xpoints) + odchylka, max(xpoints) + odchylka], [0, 0], color="black",
              alpha=0.8)  # black line on x axis
-    plt.xticks(np.arange(t, positions[
-        -1] + 1)),  # step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+    #plt.xticks(np.arange(t, positions[-1] + 1))  # step=1),labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
     for i in range(len(V_maxima)):
         ax3.plot(x[V_maxima[i][1]], -V_maxima[i][0], marker="o")
         if V_maxima[i] == min(V_maxima):
@@ -842,8 +840,7 @@ def main():
                  (x[-2] - 2, der3points[-2] - 0.5 * max(der3points)))
     # ax4.annotate(f"$\phi_{{{'min'}}} = {-max(ypoints):.2f}$", [x[y.index(max(y))], max(ypoints)],(x[y.index(max(y))]+0.5,max(ypoints)-5))
 
-    plt.xticks(np.arange(t, positions[
-        -1] + 1))  # ,labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
+    #plt.xticks(np.arange(t, positions[-1] + 1))  # ,labels=[i-abs(t) for i in range(round(positions[0])+int(inverse_odchylka),ceil(positions[-1]+int(inverse_odchylka)))])
     ax5 = fig.add_subplot(gs[1, 1])
     ax5.set_title(r"$Deflections \ w \ [m]$")
     der4 = []
@@ -875,8 +872,7 @@ def main():
     ax5.plot([0 + abs(t), 0 + abs(t)], [min(der4points - 10), max(der4points) + 10], linestyle="dotted",
              color="#bfbfbf")
     ax5.plot([min(xpoints), max(xpoints)], [0, 0], color="black", alpha=0.8)
-    plt.xticks(np.arange(t, positions[
-        -1] + 1))  # ,labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
+    #plt.xticks(np.arange(t, positions[-1] + 1))  # ,labels=[i-abs(t) for i in range(round(positions[0]),ceil(positions[-1]+abs(t)))])
     ax5.plot(x[der4.index(min(der4))], -min(der4points), marker="o")
     ax5.plot(x[der4.index(max(der4))], -max(der4points), marker="o")
     if abs(min(der4)) < abs(max(der4)):
@@ -885,7 +881,7 @@ def main():
         wmax = min(der4)
     ax5.annotate(f"$w_{{{'max,upward'}}} = {{{-min(der4):.2f}}} / EI$", [x[der4.index(min(der4))], min(der4points)],
                  (x[der4.index(min(der4))], -min(der4points)))
-    ax5.annotate(rf"$w_{{{'max,downward'}}} = {{{-max(der4):.2f}}} / EI$", [x[der4.index(max(der4))], -max(der4points)])
+    ax3.annotate(rf"$w_{{{'max,downward'}}} = {{{-max(der4):.2f}}} / EI$", [x[der4.index(max(der4))], -max(der4points)])
     ax6 = fig.add_subplot(gs[2, 1])
     ax6.set_title(r"Results")
     ax6.text(0.5, 0.9, r"$w_{max,downward}$" + f" = {-wmax:.2f}/EI m")  # if větší než 0.00 něco
@@ -902,8 +898,8 @@ def main():
     plt.xticks([])
     plt.yticks([])
     # print("index",der3.index(max(der3points)))
+
     plt.show()
 main()
-
 
 
