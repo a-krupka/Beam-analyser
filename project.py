@@ -1,9 +1,12 @@
+import json
 from operator import itemgetter, add
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from math import ceil as ceil
 import copy #needed to deepcopy my absolute positions list
+from csv import reader as reader_csv
+from json import loads as create_list
 
 
 
@@ -96,6 +99,29 @@ def ask():
     loads = []
     while True:
         y = input('Choose load("S" for Single, "D" for Distributed,"T" for triangle, "M" for point moment, "P" for parabolic load) or get out of loop by typing "X" \nTo remove last valid value enter "POP": ').upper()
+        if y == "LOAD":
+            while True:
+                save = input("Input name of your file: ")
+                #correct_save_file = False
+
+                with open("saves.csv","r") as file:
+                    reader = reader_csv(file)
+                    for i in reader:
+                        if i[0] == save:
+                            print("uspech")
+                            saved_loads = create_list(i[1].replace(';',',').replace("'",'"'))
+                            do = input('Type "R" for RUN or "A" for APPEND ').upper()
+                            if do == "R":
+                                return saved_loads,"S"
+                            elif do == "A":
+                                pass
+                                # možnosti úpravy
+                                # vyjet číselný seznam se silami od/do/load
+                                # možnost ponout sílu
+                            #correct_save_file = True
+                    #if correct_save_file == False:
+
+
         if y == "S":
             loads.append(single_load())
         if y == "D":
@@ -114,9 +140,10 @@ def ask():
             break
         if y == "POP":
             loads.pop()
+            print("Last value popped")
         if y not in ("S", "D","M","T","P","X","POP"):  # checks the right input
             print('Wrong input, type either "S","D","T","M","P" or "X"')
-    return loads
+    return loads,"N"
 
 
 def compute():
@@ -127,7 +154,10 @@ def compute():
     b_absolute = b
 
     all_loads = [] # list keeping track of absolute positions written by the user
-    for i in ask():
+    result_ask,is_safe = ask()
+    if is_safe == "S":
+        return result_ask
+    for i in result_ask:
         all_loads.append(i)
     relative_pos = copy.deepcopy(all_loads) # list keeping track of relative positions in case of converting negative postions to positive
     positions = [i[1] if i[2] not in ('D','T_L','T_P','P_L','P_P')  else i[5] for i in all_loads]
@@ -900,6 +930,11 @@ def main():
     # print("index",der3.index(max(der3points)))
 
     plt.show()
+    wish = input("Save? Y/N ").upper()
+    if wish == "Y":
+        name = input("Input the name of the file: ")
+        with open("saves.csv","a") as file:
+            file.write(f"{name},{str(all_loads).replace(',',';')}\n")
 main()
 
 
