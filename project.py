@@ -1,10 +1,10 @@
-import json
+from sys import exit
 from operator import itemgetter, add
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from math import ceil as ceil
-import copy #needed to deepcopy my absolute positions list
+from copy import deepcopy
 from csv import reader as reader_csv
 from json import loads as create_list
 
@@ -102,7 +102,7 @@ def ask():
         if y == "LOAD":
             while True:
                 save = input("Input name of your file: ")
-                #correct_save_file = False
+                
 
                 with open("saves.csv","r") as file:
                     reader = reader_csv(file)
@@ -110,18 +110,55 @@ def ask():
                         if i[0] == save:
                             print("uspech")
                             saved_loads = create_list(i[1].replace(';',',').replace("'",'"'))
-                            do = input('Type "R" for RUN or "A" for APPEND ').upper()
+                            do = input('Type "R" for RUN or "A" for ADJUST ').upper()
                             if do == "R":
                                 return saved_loads,"S"
                             elif do == "A":
-                                pass
-                                # možnosti úpravy
-                                # vyjet číselný seznam se silami od/do/load
-                                # možnost ponout sílu
-                            #correct_save_file = True
-                    #if correct_save_file == False:
-
-
+                                while True:
+                                    a = input('Type "C" for CHANGE or "A" for APPEND or "R" to RUN: ').upper()
+                                    if a == "A":
+                                        while True:
+                                            a = input('Choose load("S" for Single, "D" for Distributed,"T" for triangle, "M" for point moment, "P" for parabolic load) or get out of loop by typing "X" \nTo remove last valid value enter "POP": ').upper()
+                                            match a:
+                                                case "S":
+                                                    saved_loads.append(single_load())
+                                                case "D":
+                                                    saved_loads.append(distributed_load())
+                                                case "T":
+                                                    saved_loads.append(triangular_load())
+                                                case "P":
+                                                    saved_loads.append(parabolic_load())
+                                                case "M":
+                                                    saved_loads.append(point_moment())
+                                                case "POP":
+                                                    saved_loads.pop()
+                                                case "X":
+                                                    break
+                                    if a == "C":
+                                        while True:
+                                            for i,j in zip(saved_loads,range(len(saved_loads))):
+                                                print(f"{j}: Type: {i[2]} Position cg: {i[1]} Load: {i[0]}")
+                                            b = input('Type the number of load you wish to change or get out of loop by typing "X": ').upper()
+                                            if b== "X":
+                                                break
+                                            else:
+                                                b = int(b)
+                                            match saved_loads[b][2]:
+                                                case "R":
+                                                    pos = float(input("Input new position for Reaction: ").replace(",","."))
+                                                    saved_loads[b][1] = pos
+                                                case "S":
+                                                    saved_loads[b] = single_load()
+                                                case "D":
+                                                    saved_loads[b] = distributed_load()
+                                                case "T":
+                                                    saved_loads[b] = triangular_load()
+                                                case "P":
+                                                    saved_loads[b] = parabolic_load()
+                                                case "M":
+                                                    saved_loads[b] = point_moment()
+                                    if a == "R":
+                                        return saved_loads,"C"
         if y == "S":
             loads.append(single_load())
         if y == "D":
@@ -154,12 +191,28 @@ def compute():
     b_absolute = b
 
     all_loads = [] # list keeping track of absolute positions written by the user
-    result_ask,is_safe = ask()
-    if is_safe == "S":
+    result_ask,is_save = ask()
+    if is_save == "S":
         return result_ask
+    count = 0
     for i in result_ask:
-        all_loads.append(i)
-    relative_pos = copy.deepcopy(all_loads) # list keeping track of relative positions in case of converting negative postions to positive
+        if is_save == "C":
+            if i[2] != "R":
+                all_loads.append(i)
+            else:
+                if count == 0:
+                    a_absolute = i[1]
+                    a = a_absolute
+                    count += 1
+                elif count == 1:
+                    b_absolute = i[1]
+                    b = b_absolute
+                else:
+                    print("error")
+                    exit("Error in loading reactions")
+        else:
+            all_loads.append(i)
+    relative_pos = deepcopy(all_loads) # list keeping track of relative positions in case of converting negative postions to positive
     positions = [i[1] if i[2] not in ('D','T_L','T_P','P_L','P_P')  else i[5] for i in all_loads]
     positions.append(a)
     positions.append(b)
@@ -936,5 +989,3 @@ def main():
         with open("saves.csv","a") as file:
             file.write(f"{name},{str(all_loads).replace(',',';')}\n")
 main()
-
-
