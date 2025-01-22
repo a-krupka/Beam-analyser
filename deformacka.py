@@ -14,6 +14,8 @@ def sign_of_coord(num) -> str:
     elif num < 0: return '-'
     else: return '0'
 
+def get_pismena(x):
+    return x
 
 
 Type_of_connection = {
@@ -422,19 +424,41 @@ def terminal_input():
     """Globální matice tuhosti"""
     node_deformations = {}
     count = Counter(-1)
+    pismena = {0:"u",1:"w",2:"φ"}
+    seznam_pismen = []
+    temp = []
     for i in range(count_lines + 1):
         if lines[i].node1.num not in node_deformations.keys():
-            a = [count.plus_one() for x in range(3) if lines[i].node1.okrajove_podminky[x]]
+            a = []
+            for x in range(3):
+                if lines[i].node1.okrajove_podminky[x]:
+                    a.append(count.plus_one())
+                    seznam_pismen.append([pismena[x], lines[i].node1.num])
             node_deformations[lines[i].node1.num] = a
+
         if lines[i].node2.num not in node_deformations.keys():
-            a = [count.plus_one()for x in range(3) if lines[i].node2.okrajove_podminky[x]]
+            a = []
+            for x in range(3):
+                if lines[i].node2.okrajove_podminky[x]:
+                    a.append(count.plus_one())
+                    seznam_pismen.append([pismena[x], lines[i].node2.num])
             node_deformations[lines[i].node2.num] = a
+
+
     k_global = np.zeros((count.value + 1, count.value + 1))
+    R_global = np.zeros(count.value + 1)
+    k_list = []
     print(f"%%%%%\nNode deformations: {node_deformations}\n%%%%%")
     print("Globální matice = ", k_global)
+    print("Lokální vektor = ", R_global)
+    def_list = []
+    line_def = []
+    def_non_zero = []
+    list_of_global_vectors = []
+    list_of_R_stars = []
     for i in range(count_lines + 1):
-        def_list = [*lines[i].node1.okrajove_podminky,*lines[i].node2.okrajove_podminky]
-        print("deformace = ",def_list)
+        def_list.append([*lines[i].node1.okrajove_podminky,*lines[i].node2.okrajove_podminky])
+        print("deformace = ",def_list[i])
         lines[i].young = 2e7
         lines[i].area = 0.04
         lines[i].inertia = 1.2e-3
@@ -445,55 +469,84 @@ def terminal_input():
         R_G = T_local_to_global(R_lok_prim(lines[i],list_of_loads[i]),lines[i])
         R_origo = R_G.copy()
         R_G = is_support(R_G,lines[i])
-        def_non_zero = [j for j, x in enumerate(def_list) if x]
-        print(f"DEFORMATIONS NON ZERO = {def_non_zero}")
-        line_def = [*node_deformations[lines[i].node1.num],*node_deformations[lines[i].node2.num]]
-        d = {key : value for key,value in zip(def_non_zero,line_def) } #temporary dictionary
+        def_non_zero.append([j for j, x in enumerate(def_list[i]) if x])
+        print(f"DEFORMATIONS NON ZERO = {def_non_zero[i]}")
+        line_def.append([*node_deformations[lines[i].node1.num],*node_deformations[lines[i].node2.num]])
+        print("Line def = ",line_def[i])
+        d = {key : value for key,value in zip(range(len(def_non_zero[i])),line_def[i]) }
+        print("d = ", d)
         k_reduced = []
         k_temp = []
-        for x in range(len(def_non_zero)):
-            k_temp.append(k[def_non_zero[x]])
+        for x in range(len(def_non_zero[i])):
+            k_temp.append(k[def_non_zero[i][x]])
             temp = []
-            for j in range(len(def_non_zero)):
-                k_global[d[x]][d[j]] += (k_temp[x][j])
-                temp.append = (k_temp[x][j])
+            for j in range(len(def_non_zero[i])):
+                k_global[d[x]][d[j]] += k_temp[x][def_non_zero[i][j]]
+                temp.append(k_temp[x][def_non_zero[i][j]])
             k_reduced.append(temp)
         print("K redukovaná",k_reduced)
         k = np.linalg.pinv(k_reduced)
-        print("funguje NOVÝ = ",def_list)
+        list_of_global_vectors.append(np.array([[x] for x in R_G]))
+        R_G = [[-x] for x in R_G]
+        R_temp = []
+        R_reduced = []
+        for x in range(len(def_non_zero[i])):
+            R_temp.append(R_G[def_non_zero[i][x]])
+            temp = []
+            R_global[d[x]] += R_temp[x][0]
+            temp.append(R_temp[x])
+            R_reduced.append(temp)
         print("inverze =", k)
-        print("Primární vektor = ",[[-x] for x in R_G])
-        print("TEST",[[-x] for z,x in enumerate(R_G) if def_list[z]])
-        r_glob = np.dot(k,np.array([[-x] for z,x in enumerate(R_G) if def_list[z]]))
-        count = 0
+        print("Primární vektor = ",R_G)
+
+
+        print("Reduced R: ",R_reduced)
+        k_list.append(k)
+    print("%%%%%%%%%%%\nGLOBÁLNÍ MATICE = ", k_global)
+    print("GLOBÁLNÍ VEKTOR\n%%%%%%%%%%% = ", R_global)
+    r_glob = np.dot(np.linalg.pinv(k_global),R_global)
+    print("Globální r = ",r_glob)
+    for i in range(count.value + 1):
+        if count.value == 1 or i == count.value // 2:
+            print(f"|{r_glob[i] * 1000:.2f}| {seznam_pismen[i][0]}({seznam_pismen[i][1]}) 10^(-3) ")
+        else:
+            print(f"|{r_glob[i]*1000:.2f}| {seznam_pismen[i][0]}({seznam_pismen[i][1]})")
+    #########
+    for i in range(count_lines + 1):
+        reversed_dict = {key : value for key,value in zip(def_non_zero[i],line_def[i])}
+        order = 0
         temp = []
-        for z in range(6):
-            if def_list[z]:
-                temp.append(r_glob[count])
-                count += 1
+        for j in range(6):
+            if def_list[i][j]:
+                temp.append(r_glob[reversed_dict[def_non_zero[i][order]]])
+                order += 1
             else:
-                temp.append(np.array([0.]))
-        r_glob = np.array(temp)
-        print(f"r = \n {r_glob}")
-        r_loc = T_global_to_local(r_glob,lines[i])
+                temp.append(0)
+        print(f"passed {i} ")
+        print("rGLOB =",temp)
+        r_loc = T_global_to_local(np.array(temp),lines[i])
         k = stiffness_matrix(lines[i],False)
+        print(k)
         R_secondary_local = np.dot(k,r_loc)
-        print("^\nR* = ",R_secondary_local)
+        print(f"^\nR*({lines[i].node1.num},{lines[i].node2.num}) = {R_secondary_local}")
         #print("R* = ",np.array([[x] for x in R_origo]) + R_secondary_local)
-        R_star = np.array([[x] for x in R_origo]) + R_secondary_local
-        print("---------------\nR* =") #"uwφuwφ"
+        list_of_R_stars.append(list_of_global_vectors[i] + R_secondary_local.reshape(6,1))
+        print("Rstar =  ",list_of_R_stars[i])
+        print(f"---------------\nR* ({lines[i].node1.num},{lines[i].node2.num}) =") #"uwφuwφ"
         for a,b,c in zip(range(6),"XZMXZM",[lines[i].node1.num,lines[i].node1.num,lines[i].node1.num,lines[i].node2.num,lines[i].node2.num,lines[i].node2.num]):
-            print(f"{[f'{x:.2f}' for x in R_star.tolist()[a]]} {b}({c})")
+            print(f"{[f'{x:.2f}' for x in list_of_R_stars[i].tolist()[a]]} {b}({c})")
         print("---------------")
+    for i in range(count_lines+1):
         if lines[i].node1.num not in R_net:
-            R_net[lines[i].node1.num] = R_star[0:3]
+            R_net[lines[i].node1.num] = list_of_R_stars[i][0:3]
         else:
-            R_net[lines[i].node1.num] = R_net[lines[i].node1.num] + R_star[0:3]
+            R_net[lines[i].node1.num] = R_net[lines[i].node1.num] + list_of_R_stars[i][0:3]
         if lines[i].node2.num not in R_net:
-            R_net[lines[i].node2.num] = R_star[3:6]
+            R_net[lines[i].node2.num] = list_of_R_stars[i][3:6]
         else:
-            R_net[lines[i].node2.num] = R_net[lines[i].node2.num] + R_star[3:6]
+            R_net[lines[i].node2.num] = list_of_R_stars[i][lines[i].node2.num] + list_of_R_stars[i][3:6]
     print(R_net)
+
 
 
 
@@ -504,17 +557,3 @@ thread.start()
 
 # Run the main event loop
 root.mainloop()
-"""
-    
-    node_deformations = {}
-    count = 0
-    if lines[i].node1.num not in node_deformations.keys():
-        a = [x for x in range(count,count + 3) if lines[i].node1.okrajove_podminky]
-        node_deformations[lines[i].node1.num] = a
-        count +=  len(a)
-    if lines[i].node2.num not in node_deformations.keys():
-        a = [x for x in range(count, count + 3) if lines[i].node2.okrajove_podminky]
-        node_deformations[lines[i].node2.num] = a
-        count += len(a)
-k_global = np.zeros((count+1,count+1))
-"""
