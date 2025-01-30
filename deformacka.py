@@ -14,9 +14,12 @@ def sign_of_coord(num) -> str:
     elif num < 0: return '-'
     else: return '0'
 
-def get_pismena(x):
-    return x
-
+def round_to_nearest_half_or_one(num):
+    rounded_half = round(num * 2) / 2
+    rounded_one = round(num)
+    if abs(num - rounded_half) <= abs(num - rounded_one):
+        return rounded_half
+    return rounded_one
 
 Type_of_connection = {
     "VV" : 0,
@@ -50,7 +53,7 @@ class Node:
         return f"Node({self.x_cord}, {self.y_cord}, {self.num}, {self.hinge})"
 
 class Line:
-    def __init__(self, node1: Node, node2: Node,connection_type: dict[str,int] = Type_of_connection["VV"], young: int = 24e6, area: float = 0.06, inertia: float = 4.5e-4):
+    def __init__(self, node1: Node, node2: Node,connection_type: dict[str,int] = Type_of_connection["VV"], young: int = 25e6, area: float = 0.06, inertia: float = 1.8e-3):
         self.node1 = node1
         self.node2 = node2
         self.protilehla = self.node2.y_cord-self.node1.y_cord
@@ -134,8 +137,8 @@ def T_local_to_global(arr: list[float], line: Line):
                      arr[3] * sin(gamma) + arr[4] * cos(gamma),
                      arr[5]
                      ]
-    for i in range(6):
-        print(f"|{arr[i]:.2f} ----> {v_transformed[i]:.2f}|")
+    #for i in range(6):
+        #print(f"|{arr[i]:.2f} ----> {v_transformed[i]:.2f}|")
     return v_transformed
 
 def T_global_to_local(arr: list[float], line: Line):
@@ -207,6 +210,17 @@ def R_lok_prim(line: Line, arr: list[Load]):
             ]
             #print(f"Distributed = {[f'{x:.2f}' for x in vector]}")
             R.append(vector)
+        elif i.load_type == "M":
+            M = i.load
+            vector = [
+                0,
+                -6 * ((a*b)/l**3) * M,
+                b * ((2 * l - 3 * b)/l**2) * M,
+                0,
+                6 * ((a*b)/l**3) * M,
+                a * ((2 * l - 3 * a)/l**2) * M
+            ]
+            R.append(vector)
 
         else: print("error1")
     R = np.sum(R,axis=0).tolist()
@@ -215,12 +229,12 @@ def R_lok_prim(line: Line, arr: list[Load]):
 def stiffness_matrix(line: Line, is_global: bool):
     """True for GLOBAL matrix, False for LOCAL matrix"""
     if is_global:
-        a = line.alpha
+        a = line.gamma
     else: a = 0
-    E = line.young #TODO: dodělat
-    A = line.area #TODO: dodělat
+    E = line.young
+    A = line.area
     l = line.length
-    I = line.inertia #TODO: dodělat
+    I = line.inertia
     if line.connection_type == 0:
         k = [
                 [(E*A)/l * cos(a)**2  + (12*E*I)/l**3 * sin(a)**2, ((E*A)/l - (12*E*I)/l**3) * cos(a) * sin(a), (6 * E*I) / l**2 *sin(a),
@@ -242,7 +256,7 @@ def stiffness_matrix(line: Line, is_global: bool):
                 [
                     (6 * E * I) / l ** 2 * sin(a), - (6 * E * I) / l ** 2 * cos(a), (2 * E * I) / l,
                     -(6 * E * I) / l ** 2 * sin(a), (6 * E * I) / l ** 2 * cos(a), (4 * E * I) / l,
-                ],  # φ(a)
+                ],  # φ(b)
             ]
         return k
 
@@ -257,8 +271,8 @@ active_button = None
 
 def on_click(event):
     global count_nodes
-    x = round(event.x / 100)
-    y = round(event.y / 100)
+    x = round_to_nearest_half_or_one(event.x / 100)
+    y = round_to_nearest_half_or_one(event.y / 100)
     print(f"Clicked at: ({x}, {y})")
     if active_button:
         podpory(event, x, y)
@@ -275,9 +289,14 @@ def draw_grid():
     canvas.delete("grid_line")  # Clear previous grid
     width = canvas.winfo_width()
     height = canvas.winfo_height()
-    for i in range(0, geom_x + 1, 100):
-        canvas.create_line([(i, 0), (i, geom_x)], fill='gray', tags='grid_line')
-        canvas.create_line([(0, i), (geom_x, i)], fill='gray', tags='grid_line')
+    for i in range(0, geom_x + 1, 50):
+        if i % 100 == 0:
+            canvas.create_line([(i, 0), (i, geom_x)], fill='gray', tags='grid_line')
+            canvas.create_line([(0, i), (geom_x, i)], fill='gray', tags='grid_line')
+        """else:
+            
+            canvas.create_line([(i, 0), (i, geom_x)], fill='blue', tags='grid_line')
+            canvas.create_line([(0, i), (geom_x, i)], fill='blue', tags='grid_line')"""
 
 def connect_nodes():
     try:
@@ -421,8 +440,9 @@ def terminal_input():
             nodes[i].okrajove_podminky = deformations[supports[(nodes[i].x_cord,nodes[i].y_cord)]]
             print(f"Node {i} = {nodes[i].okrajove_podminky}")
     R_net = {}
+    Forces_nodes = {}
     """Globální matice tuhosti"""
-    node_deformations = {}
+    node_deformations = {} #Node : arr [deformation(Node.num)]
     count = Counter(-1)
     pismena = {0:"u",1:"w",2:"φ"}
     seznam_pismen = []
@@ -454,20 +474,24 @@ def terminal_input():
     def_list = []
     line_def = []
     def_non_zero = []
+    list_of_local_vectors = []
     list_of_global_vectors = []
     list_of_R_stars = []
+    list_of_forces_in_nodes = []
     for i in range(count_lines + 1):
         def_list.append([*lines[i].node1.okrajove_podminky,*lines[i].node2.okrajove_podminky])
         print("deformace = ",def_list[i])
-        lines[i].young = 2e7
-        lines[i].area = 0.04
-        lines[i].inertia = 1.2e-3
+        lines[i].young = 20e6
+        lines[i].area = 0.06
+        lines[i].inertia = 0.5e-3
         print("_\nR*",R_lok_prim(lines[i],list_of_loads[i]))
-        np.linalg.pinv(stiffness_matrix(lines[i], True))
         k = stiffness_matrix(lines[i], True)
         print(f"Stiffness matrix = {k}")
-        R_G = T_local_to_global(R_lok_prim(lines[i],list_of_loads[i]),lines[i])
+        list_of_local_vectors.append(R_lok_prim(lines[i],list_of_loads[i]))
+        print("Lokální primární vektor = ", list_of_local_vectors[i])
+        R_G = T_local_to_global(R_lok_prim(lines[i],list_of_loads[i]).copy(),lines[i])
         R_origo = R_G.copy()
+        list_of_global_vectors.append(np.array([[x] for x in R_origo]))
         R_G = is_support(R_G,lines[i])
         def_non_zero.append([j for j, x in enumerate(def_list[i]) if x])
         print(f"DEFORMATIONS NON ZERO = {def_non_zero[i]}")
@@ -486,7 +510,7 @@ def terminal_input():
             k_reduced.append(temp)
         print("K redukovaná",k_reduced)
         k = np.linalg.pinv(k_reduced)
-        list_of_global_vectors.append(np.array([[x] for x in R_G]))
+
         R_G = [[-x] for x in R_G]
         R_temp = []
         R_reduced = []
@@ -503,7 +527,7 @@ def terminal_input():
         print("Reduced R: ",R_reduced)
         k_list.append(k)
     print("%%%%%%%%%%%\nGLOBÁLNÍ MATICE = ", k_global)
-    print("GLOBÁLNÍ VEKTOR\n%%%%%%%%%%% = ", R_global)
+    print("GLOBÁLNÍ VEKTOR = ", R_global,"\n%%%%%%%%%%%")
     r_glob = np.dot(np.linalg.pinv(k_global),R_global)
     print("Globální r = ",r_glob)
     for i in range(count.value + 1):
@@ -530,7 +554,9 @@ def terminal_input():
         R_secondary_local = np.dot(k,r_loc)
         print(f"^\nR*({lines[i].node1.num},{lines[i].node2.num}) = {R_secondary_local}")
         #print("R* = ",np.array([[x] for x in R_origo]) + R_secondary_local)
-        list_of_R_stars.append(list_of_global_vectors[i] + R_secondary_local.reshape(6,1))
+        list_of_R_stars.append(T_global_to_local(list_of_global_vectors[i],lines[i]) + R_secondary_local.reshape(6,1))
+        list_of_forces_in_nodes.append(T_local_to_global(list_of_R_stars[i],lines[i]))
+        #list_of_R_stars.append(list_of_local_vectors[i] + R_secondary_local.reshape(6, 1))
         print("Rstar =  ",list_of_R_stars[i])
         print(f"---------------\nR* ({lines[i].node1.num},{lines[i].node2.num}) =") #"uwφuwφ"
         for a,b,c in zip(range(6),"XZMXZM",[lines[i].node1.num,lines[i].node1.num,lines[i].node1.num,lines[i].node2.num,lines[i].node2.num,lines[i].node2.num]):
@@ -545,7 +571,21 @@ def terminal_input():
             R_net[lines[i].node2.num] = list_of_R_stars[i][3:6]
         else:
             R_net[lines[i].node2.num] = list_of_R_stars[i][lines[i].node2.num] + list_of_R_stars[i][3:6]
-    print(R_net)
+    for i in range(len(R_net)):
+        print(f"Node({i}): \n\t\t\tX({i}) = {R_net[i][0][0]}\n\t\t\tZ({i}) = {R_net[i][1][0]}\n\t\t\tM({i}) = {R_net[i][2][0]:.2f}")
+
+    print("Globální síly v uzlech: ")
+    for i in range(count_lines+1):
+        if lines[i].node1.num not in Forces_nodes:
+            Forces_nodes[lines[i].node1.num] = list_of_forces_in_nodes[i][0:3]
+        else:
+            Forces_nodes[lines[i].node1.num] = Forces_nodes[lines[i].node1.num] + list_of_forces_in_nodes[i][0:3]
+        if lines[i].node2.num not in Forces_nodes:
+            Forces_nodes[lines[i].node2.num] = list_of_forces_in_nodes[i][3:6]
+        else:
+            Forces_nodes[lines[i].node2.num] = list_of_forces_in_nodes[i][lines[i].node2.num] + list_of_forces_in_nodes[i][3:6]
+    for i in range(len(Forces_nodes)):
+        print(f"Node({i}): \n\t\t\tX({i}) = {Forces_nodes[i][0][0]}\n\t\t\tZ({i}) = {Forces_nodes[i][1][0]}\n\t\t\tM({i}) = {Forces_nodes[i][2][0]:.2f}")
 
 
 
