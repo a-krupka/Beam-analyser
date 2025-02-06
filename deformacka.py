@@ -1,32 +1,17 @@
 import threading
 from math import sqrt,atan,pi,sin,cos
-from enum import Enum
 from ask import *
 import numpy as np
 import tkinter as tk
 from subprocess import call
+import matplotlib
+matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
 
+from classes import *
+from funkce import *
+from myStrian import main
 
-
-
-def sign_of_coord(num) -> str:
-    if num > 0: return '+'
-    elif num < 0: return '-'
-    else: return '0'
-
-def round_to_nearest_half_or_one(num):
-    rounded_half = round(num * 2) / 2
-    rounded_one = round(num)
-    if abs(num - rounded_half) <= abs(num - rounded_one):
-        return rounded_half
-    return rounded_one
-
-Type_of_connection = {
-    "VV" : 0,
-    "VK" : 1,
-    "KV" : 2,
-    "KK" : 3
-}
 
 class Counter:
     def __init__(self, value):
@@ -41,227 +26,7 @@ class Counter:
         return self.value
 
 
-class Node:
-    def __init__(self,x_cord: float,y_cord: float,num: int, okrajove_podminky: list[bool] = [True,True,True],hinge: bool = False):
-        self.x_cord = x_cord
-        self.y_cord = y_cord
-        self.num = num
-        self.hinge = hinge
-        self.okrajove_podminky = okrajove_podminky
-
-    def __repr__(self):
-        return f"Node({self.x_cord}, {self.y_cord}, {self.num}, {self.hinge})"
-
-class Line:
-    def __init__(self, node1: Node, node2: Node,connection_type: dict[str,int] = Type_of_connection["VV"], young: int = 25e6, area: float = 0.06, inertia: float = 1.8e-3):
-        self.node1 = node1
-        self.node2 = node2
-        self.protilehla = self.node2.y_cord-self.node1.y_cord
-        self.prilehla = self.node2.x_cord-self.node1.x_cord
-        self.length = self.compute_len()
-        self.half = self.coord_half_len()
-        self.alpha = self.compute_alpha()
-        self.gamma = self.compute_gamma()
-        self.connection_type = connection_type
-        self.young = young # [kPa]
-        self.area = area # m2
-        self.inertia = inertia # m 4
-
-    def compute_len(self) -> float:
-        return sqrt(abs(self.prilehla) **2 + abs(self.protilehla) **2)
-
-    def compute_alpha(self) -> float:
-        if self.prilehla != 0:
-            return atan(abs(self.protilehla)/abs(self.prilehla))
-        else:
-            return pi/2
-
-    def coord_half_len(self) -> tuple:
-        return ((self.node1.x_cord + self.node2.x_cord) / 2, (self.node1.y_cord + self.node2.y_cord) / 2)
-
-    def compute_gamma(self) -> float:
-        match (sign_of_coord(self.prilehla),sign_of_coord(self.protilehla)):
-            case ('+','-'):
-                return 2*pi - self.alpha
-            case ('+', '+'):
-                return self.alpha
-            case ('-', '+'):
-                return pi - self.alpha
-            case ('-', '-'):
-                return pi + self.alpha
-            case ('0', '-'):
-                return 3/2 * pi
-            case ('0', '+'):
-                return pi/2
-            case ('+', '0'):
-                return 0
-            case ('-', '0'):
-                return pi
-    def __repr__(self):
-        return f"Line({self.node1}, {self.node2}, length {self.length}, gamma {self.gamma * 360 / (2* pi)}, alpha {self.alpha * 360 / (2* pi)}\n\t connection_type {self.connection_type} E= {self.young}, A = {self.area}, I = {self.inertia})"
-
-class Load:
-    def __init__(self,load, pos_cg, load_type, is_node, load_per_metre, start, fin, length,n):
-        self.load = load
-        self.pos_cg = pos_cg
-        self.load_type = load_type
-        self.is_node = is_node
-        self.load_per_metre = load_per_metre
-        self.start = start
-        self.fin = fin
-        self.length = length
-        self.n = n
-    def __repr__(self):
-        return f"Load({self.load}, pos {self.pos_cg}, type {self.load_type})"
-
-def is_support(arr: list[float],line: Line):
-    x = line.node1.okrajove_podminky
-    y = line.node2.okrajove_podminky
-    print(f"Node L = {x} Node P = {y}"  )
-    arr[0] = arr[0] * x[0]
-    arr[1] = arr[1] * x[1]
-    arr[2] = arr[2] * x[2]
-    arr[3] = arr[3] * y[0]
-    arr[4] = arr[4] * y[1]
-    arr[5] = arr[5] * y[2]
-    print("Array after transformation: ",arr)
-    return arr
-
-def T_local_to_global(arr: list[float], line: Line):
-    """Transformační vektor z lokálních do globálních souřadnic"""
-    gamma = line.gamma
-    v_transformed = [arr[0]*cos(gamma) - arr[1] * sin(gamma),
-                     arr[0] * sin(gamma) + arr[1] * cos(gamma),
-                     arr[2],
-                     arr[3] * cos(gamma) - arr[4] * sin(gamma),
-                     arr[3] * sin(gamma) + arr[4] * cos(gamma),
-                     arr[5]
-                     ]
-    #for i in range(6):
-        #print(f"|{arr[i]:.2f} ----> {v_transformed[i]:.2f}|")
-    return v_transformed
-
-def T_global_to_local(arr: list[float], line: Line):
-    """Transformační vektor z globálních do lokálních souřadnic"""
-    gamma = line.gamma
-    v_transformed = [arr[0]*cos(gamma) + arr[1] * sin(gamma),
-                     -arr[0] * sin(gamma) + arr[1] * cos(gamma),
-                     arr[2],
-                     arr[3] * cos(gamma) + arr[4] * sin(gamma),
-                     -arr[3] * sin(gamma) + arr[4] * cos(gamma),
-                     arr[5]
-                     ]
-    #for i in range(6):
-        #print(f"|{arr[i]:.2f} ----> {v_transformed[i]:.2f}|")
-    return v_transformed
-
-
-def R_lok_prim(line: Line, arr: list[Load]):
-    R = []
-    alpha = line.alpha
-    if alpha in (0,pi/2,pi,3*pi/2):
-        alpha = 0
-    for i in arr:
-        l = line.length
-        if alpha in (0,pi/2,pi,3*pi/2):
-            a = i.pos_cg
-            b = l - a
-            Fz = i.load
-            Fx = 0 #TODO změnit / přidat možnost horizontální síly
-        else:
-            a = i.pos_cg/cos(alpha) # přepona z definice cosinu
-            b = l - a
-            Fz = i.load * cos(alpha)
-            Fx = i.load * sin(alpha)
-        if i.load_type == "S":
-            vector = [
-                (b/l) * Fx,
-                -b**2 * ((3*l -2*b) / l**3) * Fz,
-                ((a*b**2)/l**2) * Fz,
-                (a/l) * Fx,
-                -a**2 * ((3*l-2*a) / l**3) * Fz,
-                -((a**2 * b)/l**2) * Fz
-            ]
-            #print(f"Singular = {vector}")
-            R.append(vector)
-
-        elif i.load_type == "D":
-            q = i.load_per_metre * cos(alpha)
-            if line.protilehla < 0:
-                n = i.load_per_metre * sin(alpha)
-            else:
-                n = - i.load_per_metre * sin(alpha)
-            b = 0
-            if i.start != 0:
-                b = i.start
-                #print(f" b = {b} i.start != line.node1.x_cord")
-            if alpha in (0, pi / 2, pi, 3 * pi / 2):
-                a = (i.fin)
-            else:
-                a = (i.fin)/cos(alpha)
-            #print(f"a = {a} ~ b = {b}")
-            vector = [
-                ((2*a*l-a**2 - (2*b*l-b**2) )/(2*l)) * n,
-                ((-2*a*l**3 +2*a**3*l - a**4 + (2*b*l**3 - 2*b**3*l + b**4))/(2*l**3))*q,
-                ((6 * a**2 * l**2 - 8*a**3*l + 3*a**4 - (6 * b**2 * l**2 - 8*b**3*l + 3*b**4)) / (12*l**2)) * q,
-                ((a**2 - b**2)/(2*l))*n,
-                ((-2 * a**3 * l + a ** 4 + (2 * b**3 * l - b ** 4)) / (2 * l ** 3)) * q,
-                ((-4 * a ** 3 * l + 3 * a**4 + (4 * b ** 3 * l - 3 * b**4)) / (12 * l ** 2)) * q
-            ]
-            #print(f"Distributed = {[f'{x:.2f}' for x in vector]}")
-            R.append(vector)
-        elif i.load_type == "M":
-            M = i.load
-            vector = [
-                0,
-                -6 * ((a*b)/l**3) * M,
-                b * ((2 * l - 3 * b)/l**2) * M,
-                0,
-                6 * ((a*b)/l**3) * M,
-                a * ((2 * l - 3 * a)/l**2) * M
-            ]
-            R.append(vector)
-
-        else: print("error1")
-    R = np.sum(R,axis=0).tolist()
-    return R
-
-def stiffness_matrix(line: Line, is_global: bool):
-    """True for GLOBAL matrix, False for LOCAL matrix"""
-    if is_global:
-        a = line.gamma
-    else: a = 0
-    E = line.young
-    A = line.area
-    l = line.length
-    I = line.inertia
-    if line.connection_type == 0:
-        k = [
-                [(E*A)/l * cos(a)**2  + (12*E*I)/l**3 * sin(a)**2, ((E*A)/l - (12*E*I)/l**3) * cos(a) * sin(a), (6 * E*I) / l**2 *sin(a),
-                - (E*A)/l * cos(a)**2  + (12*E*I)/l**3 * sin(a)**2, - ((E*A)/l - (12*E*I)/l**3) * cos(a) * sin(a), (6 * E*I) / l**2 *sin(a)
-                ], #u(a)
-                [((E*A)/l - (12*E*I)/l**3) * cos(a) * sin(a), (E*A)/l * sin(a)**2  + (12*E*I)/l**3 * cos(a)**2, -(6 * E*I) / l**2 * cos(a),
-                 -((E * A) / l - (12 * E * I) / l ** 3) * cos(a) * sin(a), -((E * A) / l * sin(a) ** 2 + (12 * E * I) / l ** 3 * cos(a) ** 2), -(6 * E * I) / l ** 2 * cos(a)
-                ], #w(a)
-                [
-                     (6 * E * I) / l ** 2 * sin(a), - (6 * E * I) / l ** 2 * cos(a), (4*E*I)/l,
-                    -(6 * E * I) / l ** 2 * sin(a),   (6 * E * I) / l ** 2 * cos(a), (2 * E * I) / l,
-                ],#φ(a)
-                [-(E * A) / l * cos(a) ** 2 + (12 * E * I) / l ** 3 * sin(a) ** 2,-((E * A) / l - (12 * E * I) / l ** 3) * cos(a) * sin(a), -(6 * E * I) / l ** 2 * sin(a),
-                 (E * A) / l * cos(a) ** 2 + (12 * E * I) / l ** 3 * sin(a) ** 2, ((E * A) / l - (12 * E * I) / l ** 3) * cos(a) * sin(a), - (6 * E * I) / l ** 2 * sin(a)
-                ], #u(b)
-                [-((E * A) / l - (12 * E * I) / l ** 3) * cos(a) * sin(a),-((E * A) / l * sin(a) ** 2 + (12 * E * I) / l ** 3 * cos(a) ** 2), (6 * E * I) / l ** 2 * cos(a),
-                 ((E * A) / l - (12 * E * I) / l ** 3) * cos(a) * sin(a),(E * A) / l * sin(a) ** 2 + (12 * E * I) / l ** 3 * cos(a) ** 2, (6 * E * I) / l ** 2 * cos(a)
-                 ], #w(b)
-                [
-                    (6 * E * I) / l ** 2 * sin(a), - (6 * E * I) / l ** 2 * cos(a), (2 * E * I) / l,
-                    -(6 * E * I) / l ** 2 * sin(a), (6 * E * I) / l ** 2 * cos(a), (4 * E * I) / l,
-                ],  # φ(b)
-            ]
-        return k
-
-import tkinter as tk
-global count_nodes,count_lines,actibe_button
+global count_nodes,count_lines,active_button
 
 count_nodes = -1
 count_lines = -1
@@ -279,7 +44,8 @@ def on_click(event):
     else:
         count_nodes += 1
         canvas.create_rectangle(x*100 - 20, y*100 - 20, x*100 + 20, y*100 + 20, outline="red", width= 4)
-        canvas.create_text(x * 100 + 30, y * 100, text=str(count_nodes), font=("Arial", 14), fill="blue")
+        canvas.create_text(x * 100 , y * 100, text=str(count_nodes), font=("Arial", 20), fill="blue")
+
         node = Node(x,y,count_nodes)
         nodes[count_nodes] = node
         print(f"Node {count_nodes}: {nodes[count_nodes]}")
@@ -345,12 +111,17 @@ connect_button.pack(pady=10)
 button_frame = tk.Frame(frame)
 button_frame.pack(pady=10)  # Add padding for spacing below "Connect" button
 buttons = {}
-buttons["A"] = tk.Button(button_frame, text="A", width=5, command=lambda: toggle_button("A"))
-buttons["A"].grid(row=0, column=0, padx=5)
-buttons["B"] = tk.Button(button_frame, text="B", width=5, command=lambda: toggle_button("B"))
-buttons["B"].grid(row=0, column=1, padx=5)
-buttons["C"] = tk.Button(button_frame, text="C", width=5, command=lambda: toggle_button("C"))
-buttons["C"].grid(row=0, column=2, padx=5)
+button_images = {
+    "A": tk.PhotoImage(file="images/button_neposuvna.png"),
+    "B": tk.PhotoImage(file="images/button_kluzna.png"),
+    "C": tk.PhotoImage(file="images/button_vetknuti.png"),
+    "D": tk.PhotoImage(file="images/button_rotated.png"),  # Add new button image
+}
+
+# Create buttons with images
+for idx, key in enumerate(button_images.keys()):  # Automatically iterate over all buttons
+    buttons[key] = tk.Button(button_frame, image=button_images[key], command=lambda k=key: toggle_button(k))
+    buttons[key].grid(row=0, column=idx, padx=5)
 
 # Bind mouse click event and resizing event
 canvas.bind("<Button-1>", on_click)
@@ -360,7 +131,8 @@ images = {}
 supports = {}
 deformations = {"A" : [False,False,True],
                 "B" : [True,False,True],
-                "C" : [False,False,False]
+                "C" : [False,False,False],
+                "D" : [False,True,True]
                 }
 def podpory(event, x, y):
     print(f"Podpory function triggered by Button {active_button} at: ({x}, {y})")
@@ -370,8 +142,9 @@ def podpory(event, x, y):
     # Map button IDs to specific image paths
     image_paths = {
         "A": "images/podpora_resized.png",  # Replace with the actual file path
-        "B": "images/podpora_resized.png",
-        "C": "images/podpora_resized.png",
+        "B": "images/kluzna.png",
+        "C": "images/vetknuti.png",
+        "D": "images/rotated.png"
     }
 
     # Get the image path for the current active button
@@ -385,7 +158,17 @@ def podpory(event, x, y):
     images[(x, y)] = img
     supports[(x, y)] = active_button
     # Draw the image on the canvas
-    canvas.create_image(x * 100, y * 100 + 75, image=img, anchor=tk.CENTER)
+    match active_button:
+        case "A":
+            canvas.create_image(x * 100, y * 100 + 65, image=img, anchor=tk.CENTER)
+        case "B":
+            canvas.create_image(x * 100, y * 100 + 60, image=img, anchor=tk.CENTER)
+        case "C":
+            canvas.create_image(x * 100 + 40, y * 100, image=img, anchor=tk.CENTER)
+        case "D":
+            canvas.create_image(x * 100 + 60, y * 100, image=img, anchor=tk.CENTER)
+
+    #canvas.create_image(x * 100 + 40, y * 100 , image=img, anchor=tk.CENTER)
 
 def toggle_button(button_id):
     global active_button
@@ -407,25 +190,44 @@ def update_button_visuals():
         else:
             button.config(relief=tk.RAISED, state=tk.NORMAL)
 
-
-def terminal_input():
+global points
+points = []
+def terminal_input(points):
     list_of_loads = []
+
+    count = 0
     while True:
+        global zero
+        zero = True
         while True:
             #for x in range(count_lines+1):
             print(f"Enter loads for Line ")
             a = ask()
             print(a[0])
+            if zero:
+                list_form = [[] for x in range(count_lines + 1)]
             temp = []
             for i in range(len(a[0])):
+                if lines[len(list_of_loads)].alpha in (0,pi/2,pi,3*pi/2):
+                    list_form[count].append(a[0][i])
+                else:
+                    if a[0][i][2] == "S":
+                        list_form[count].append(single_load(pos=a[0][i][1],load=a[0][i][0],alpha=lines[len(list_of_loads)].alpha,called=True ))
+                    elif a[0][i][2] == "D":
+                        list_form[count].append(distributed_load(pos=a[0][i][1],load=a[0][i][4],alpha=lines[len(list_of_loads)].alpha,called=True,start=a[0][i][5],fin = a[0][i][6]))
+                    else:
+                        raise ValueError("error")
                 load = Load(*a[0][i])
                 temp.append(load)
+            count += 1
             list_of_loads.append(temp)
             print(temp)
             print(f"num of loads {len(list_of_loads)}",f"number of lines = {count_lines}")
             print(list_of_loads)
+            zero = False
             if len(list_of_loads) == count_lines+1:
                 break
+
         print(list_of_loads)
         lock = input("Start? Press Y: ").capitalize()
         if lock == "Y":
@@ -489,7 +291,7 @@ def terminal_input():
         print(f"Stiffness matrix = {k}")
         list_of_local_vectors.append(R_lok_prim(lines[i],list_of_loads[i]))
         print("Lokální primární vektor = ", list_of_local_vectors[i])
-        R_G = T_local_to_global(R_lok_prim(lines[i],list_of_loads[i]).copy(),lines[i])
+        R_G = T_local_to_global(R_lok_prim(lines[i],list_of_loads[i]),lines[i]) #tady smazáno .copy()
         R_origo = R_G.copy()
         list_of_global_vectors.append(np.array([[x] for x in R_origo]))
         R_G = is_support(R_G,lines[i])
@@ -510,7 +312,6 @@ def terminal_input():
             k_reduced.append(temp)
         print("K redukovaná",k_reduced)
         k = np.linalg.pinv(k_reduced)
-
         R_G = [[-x] for x in R_G]
         R_temp = []
         R_reduced = []
@@ -560,6 +361,20 @@ def terminal_input():
         print("Rstar =  ",list_of_R_stars[i])
         print(f"---------------\nR* ({lines[i].node1.num},{lines[i].node2.num}) =") #"uwφuwφ"
         for a,b,c in zip(range(6),"XZMXZM",[lines[i].node1.num,lines[i].node1.num,lines[i].node1.num,lines[i].node2.num,lines[i].node2.num,lines[i].node2.num]):
+            match a:
+                case 1:
+                    list_form[i].append(Load(*list_of_R_stars[i].tolist()[a],0,"R","a").return_load())
+                case 2:
+                    temp = list_of_R_stars[i].tolist()[a]
+                    if abs(round(temp[0], 4)) != 0:
+                        list_form[i].append(Load(*list_of_R_stars[i].tolist()[a], 0, "M").return_load())
+                case 4:
+                    list_form[i].append(Load(*list_of_R_stars[i].tolist()[a], lines[i].length, "R", "b").return_load())
+                case 5:
+                    temp =  list_of_R_stars[i].tolist()[a]
+                    if abs(round(temp[0],4)) != 0:
+                        list_form[i].append(Load(*temp, lines[i].length, "M").return_load())
+
             print(f"{[f'{x:.2f}' for x in list_of_R_stars[i].tolist()[a]]} {b}({c})")
         print("---------------")
     for i in range(count_lines+1):
@@ -574,6 +389,7 @@ def terminal_input():
     for i in range(len(R_net)):
         print(f"Node({i}): \n\t\t\tX({i}) = {R_net[i][0][0]}\n\t\t\tZ({i}) = {R_net[i][1][0]}\n\t\t\tM({i}) = {R_net[i][2][0]:.2f}")
 
+        #list_of_loads[i].append(Load())#here
     print("Globální síly v uzlech: ")
     for i in range(count_lines+1):
         if lines[i].node1.num not in Forces_nodes:
@@ -586,14 +402,42 @@ def terminal_input():
             Forces_nodes[lines[i].node2.num] = list_of_forces_in_nodes[i][lines[i].node2.num] + list_of_forces_in_nodes[i][3:6]
     for i in range(len(Forces_nodes)):
         print(f"Node({i}): \n\t\t\tX({i}) = {Forces_nodes[i][0][0]}\n\t\t\tZ({i}) = {Forces_nodes[i][1][0]}\n\t\t\tM({i}) = {Forces_nodes[i][2][0]:.2f}")
+    print(f"List of loads: {list_form}")
+
+    def plot_graph(a, b):
+        plt.figure()
+        plt.plot(a, b)
+        plt.show()
+
+    for i in range(count_lines + 1):
+        a, b, c, d = main(list_form[i], True)
+        if i == 0:
+            with open("test.csv","w") as file:
+                for i,j in zip(c,d):
+                    file.write(f"{i},{j}\n")
+
+
+        points.append([c,d])
+        #draw_moments(canvas,c,d,lines[i])
+
 
 
 
 
 # Start the input thread
-thread = threading.Thread(target=terminal_input, daemon=True)
+thread = threading.Thread(target=terminal_input,args=(points,), daemon=True)
 thread.start()
-
-
+def check_points():
+    """Check the queue and draw lines if data is available."""
+    global points
+    while points:
+        magnitude = 20
+        for i in range(count_lines+1):
+            #print(points)
+            draw_moments(canvas,points[i][0],points[i][1]/magnitude,lines[i])
+        #canvas.delete('grid_line')
+        points = []
+    root.after(100, check_points)
+check_points()
 # Run the main event loop
 root.mainloop()
